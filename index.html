@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>my-first-app · 部署測試</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+      background: linear-gradient(160deg, #f5f3ef 0%, #e8e3db 100%);
+      color: #3a3631;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fdfcfa;
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(58, 54, 49, 0.08);
+      text-align: center;
+    }
+    .check {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      background: #7d9b76;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+    }
+    h1 { font-size: 22px; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .sub { font-size: 15px; color: #8a847b; margin-bottom: 28px; line-height: 1.6; }
+    .info {
+      background: #f5f3ef;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      color: #6a655d;
+      text-align: left;
+      line-height: 1.9;
+    }
+    .info b { color: #3a3631; font-weight: 600; }
+    .ver { margin-top: 20px; font-size: 12px; color: #b3ada3; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="check">✓</div>
+    <h1>部署成功</h1>
+    <p class="sub">如果你在手機上看到這一頁,<br>代表 GitHub → Vercel 的管道已經打通。</p>
+    <div class="info">
+      <div>📱 你的裝置:<b><span id="device">偵測中…</span></b></div>
+      <div>📐 螢幕寬度:<b><span id="width">—</span> px</b></div>
+      <div>🕐 載入時間:<b><span id="time">—</span></b></div>
+    </div>
+    <div class="ver">my-first-app · v0.1.0</div>
+  </div>
+  <script>
+    document.getElementById('device').textContent =
+      /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? '手機 / 行動裝置' : '桌機 / 筆電';
+    document.getElementById('width').textContent = window.innerWidth;
+    document.getElementById('time').textContent = new Date().toLocaleString('zh-TW', { hour12: false });
+  </script>
+</body>
+</html>
