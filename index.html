@@ -1,74 +1,781 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>my-first-app · 部署測試</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
-      background: linear-gradient(160deg, #f5f3ef 0%, #e8e3db 100%);
-      color: #3a3631;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .card {
-      background: #fdfcfa;
-      border-radius: 20px;
-      padding: 40px 32px;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 8px 32px rgba(58, 54, 49, 0.08);
-      text-align: center;
-    }
-    .check {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      background: #7d9b76;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      color: #fff;
-    }
-    h1 { font-size: 22px; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .sub { font-size: 15px; color: #8a847b; margin-bottom: 28px; line-height: 1.6; }
-    .info {
-      background: #f5f3ef;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 13px;
-      color: #6a655d;
-      text-align: left;
-      line-height: 1.9;
-    }
-    .info b { color: #3a3631; font-weight: 600; }
-    .ver { margin-top: 20px; font-size: 12px; color: #b3ada3; letter-spacing: 1px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>生活軌跡 · v0.2.0</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #f5f3ef;
+    --bg2: #e8e3db;
+    --card: #fdfcfa;
+    --ink: #3a3631;
+    --ink2: #6a655d;
+    --ink3: #b3ada3;
+    --line: #ece8e1;
+    --accent: #7d9b76;
+    --shadow: 0 4px 24px rgba(58,54,49,0.07);
+    --c-work: #8a93b5;
+    --c-study: #b5a07d;
+    --c-exercise: #c08a6f;
+    --c-chore: #9b9287;
+    --c-leisure: #7faaa0;
+    --c-social: #c0879b;
+    --c-sleep: #8a86a8;
+    --c-other: #c3bdb3;
+  }
+  body {
+    font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 76px;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+  header {
+    padding: 20px 0 12px;
+    text-align: center;
+  }
+  header h1 { font-size: 20px; letter-spacing: 1px; font-weight: 600; }
+  header .ver { font-size: 11px; color: var(--ink3); letter-spacing: 1px; margin-top: 2px; }
+
+  .live {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .live.active { border: 1.5px solid var(--accent); }
+  .input-row { display: flex; gap: 8px; }
+  .input-row input {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    outline: none;
+  }
+  .input-row input:focus { border-color: var(--accent); }
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn.ghost { background: var(--bg2); color: var(--ink2); }
+  .btn.sm { padding: 8px 12px; font-size: 13px; }
+  .running {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .running .rtxt { font-size: 14px; line-height: 1.4; }
+  .running .rtxt b { font-weight: 600; }
+  .running .rmeta { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+  .timer { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--accent); font-weight: 600; }
+
+  .tabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(253,252,250,0.94);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    z-index: 50;
+  }
+  .tabbar .tab {
+    flex: 1;
+    padding: 10px 0 14px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink3);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+  .tab .ic { font-size: 20px; display: block; margin-bottom: 2px; }
+  .tab.on { color: var(--accent); }
+
+  .view { display: none; }
+  .view.on { display: block; }
+
+  .sect-title { font-size: 13px; color: var(--ink2); margin: 18px 4px 8px; letter-spacing: 0.5px; }
+
+  .day-head { font-size: 13px; color: var(--ink2); padding: 10px 4px 6px; font-weight: 600; }
+  .entry {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .entry .body { flex: 1; min-width: 0; }
+  .entry .t1 { font-size: 15px; line-height: 1.3; word-break: break-word; }
+  .entry .t2 { font-size: 12px; color: var(--ink2); margin-top: 3px; }
+  .entry .dur { font-size: 13px; color: var(--ink2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .empty { text-align: center; color: var(--ink3); padding: 40px 20px; font-size: 14px; line-height: 1.8; }
+
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 12px; }
+  .cal-head .mo { font-size: 16px; font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .cal-grid .wd { text-align: center; font-size: 11px; color: var(--ink3); padding: 4px 0; }
+  .cal-cell {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    background: var(--card);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    position: relative;
+    border: 1px solid transparent;
+  }
+  .cal-cell.blank { background: none; cursor: default; }
+  .cal-cell.today { border-color: var(--accent); }
+  .cal-cell.sel { background: var(--accent); color: #fff; }
+  .cal-cell .bars { display: flex; gap: 2px; margin-top: 3px; height: 4px; }
+  .cal-cell .bars i { width: 4px; height: 4px; border-radius: 50%; }
+
+  .week-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .week-row .wlabel { width: 36px; font-size: 12px; color: var(--ink2); flex-shrink: 0; }
+  .week-bar { flex: 1; height: 22px; border-radius: 6px; overflow: hidden; display: flex; background: var(--bg2); }
+  .week-bar i { height: 100%; }
+
+  .card2 { background: var(--card); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .pie-wrap { display: flex; align-items: center; gap: 18px; }
+  .legend { flex: 1; }
+  .legend .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
+  .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
+  .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .range-tabs button {
+    flex: 1; padding: 8px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer;
+  }
+  .range-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .goal {
+    background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px;
+  }
+  .goal .gtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .goal .gname { font-size: 15px; font-weight: 600; }
+  .goal .gtype { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+  .goal .gval { font-size: 13px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .progress { height: 8px; background: var(--bg2); border-radius: 20px; margin-top: 10px; overflow: hidden; }
+  .progress i { display: block; height: 100%; border-radius: 20px; background: var(--accent); transition: width 0.4s; }
+  .goal.done .progress i { background: #7d9b76; }
+  .goal .gstreak { font-size: 11px; color: var(--accent); margin-top: 6px; }
+  .goal .del { color: var(--ink3); font-size: 20px; cursor: pointer; background: none; border: none; line-height: 1; }
+
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(58,54,49,0.4);
+    display: none; align-items: flex-end; justify-content: center; z-index: 100;
+  }
+  .modal-bg.on { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 22px 22px 0 0; padding: 22px 20px 32px;
+    width: 100%; max-width: 480px; max-height: 86vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--ink2); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px;
+    padding: 11px 13px; font-size: 15px; font-family: inherit; background: #fff; color: var(--ink); outline: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > * { flex: 1; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 8px; }
+  .modal-btns .btn { flex: 1; }
+  .catpick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .catpick button {
+    border: 1px solid var(--line); background: #fff; border-radius: 20px;
+    padding: 6px 12px; font-size: 13px; font-family: inherit; cursor: pointer; color: var(--ink2);
+  }
+  .catpick button.on { color: #fff; border-color: transparent; }
+  .hint { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-top: 4px; }
+  .fab {
+    position: fixed; right: 18px; bottom: 86px; width: 52px; height: 52px;
+    border-radius: 50%; background: var(--accent); color: #fff; border: none;
+    font-size: 26px; box-shadow: 0 6px 18px rgba(125,155,118,0.4); cursor: pointer; z-index: 40;
+  }
+  .summary-box { background: var(--bg); border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.9; color: var(--ink2); }
+  .summary-box b { color: var(--ink); }
+</style>
 </head>
 <body>
-  <div class="card">
-    <div class="check">✓</div>
-    <h1>部署成功</h1>
-    <p class="sub">如果你在手機上看到這一頁,<br>代表 GitHub → Vercel 的管道已經打通。</p>
-    <div class="info">
-      <div>📱 你的裝置:<b><span id="device">偵測中…</span></b></div>
-      <div>📐 螢幕寬度:<b><span id="width">—</span> px</b></div>
-      <div>🕐 載入時間:<b><span id="time">—</span></b></div>
+<div class="wrap">
+  <header>
+    <h1>生活軌跡</h1>
+    <div class="ver">my-first-app · v0.2.0</div>
+  </header>
+
+  <section class="view on" id="v-today">
+    <div class="live" id="liveBox">
+      <div class="input-row">
+        <input id="entryInput" placeholder="現在要做什麼？例如「寫企劃」" autocomplete="off">
+        <button class="btn" id="startBtn">開始</button>
+      </div>
+      <div id="runningSlot"></div>
     </div>
-    <div class="ver">my-first-app · v0.1.0</div>
+    <div id="todayList"></div>
+  </section>
+
+  <section class="view" id="v-cal">
+    <div class="cal-head">
+      <button class="btn ghost sm" id="prevMo">‹</button>
+      <div class="mo" id="calMonth"></div>
+      <button class="btn ghost sm" id="nextMo">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div id="calDayDetail"></div>
+  </section>
+
+  <section class="view" id="v-week">
+    <div class="cal-head">
+      <button class="btn ghost sm" id="prevWk">‹</button>
+      <div class="mo" id="weekLabel"></div>
+      <button class="btn ghost sm" id="nextWk">›</button>
+    </div>
+    <div class="card2" id="weekTraj"></div>
+    <div class="sect-title">本週類別佔比</div>
+    <div class="card2" id="weekPie"></div>
+  </section>
+
+  <section class="view" id="v-stats">
+    <div class="range-tabs" id="rangeTabs">
+      <button data-r="week" class="on">本週</button>
+      <button data-r="month">本月</button>
+      <button data-r="all">全部</button>
+    </div>
+    <div class="card2" id="statPie"></div>
+    <div class="sect-title">時間黑洞偵測</div>
+    <div class="card2" id="blackhole"></div>
+    <div class="sect-title">週回顧</div>
+    <div class="card2"><div class="summary-box" id="weekSummary"></div></div>
+  </section>
+
+  <section class="view" id="v-goals">
+    <div id="goalList"></div>
+    <button class="btn" id="addGoalBtn" style="width:100%;margin-top:8px;">＋ 新增目標</button>
+  </section>
+</div>
+
+<button class="fab" id="fabAdd" title="補記行程">＋</button>
+
+<nav class="tabbar">
+  <button class="tab on" data-v="today"><span class="ic">📝</span>今日</button>
+  <button class="tab" data-v="cal"><span class="ic">📅</span>日曆</button>
+  <button class="tab" data-v="week"><span class="ic">📊</span>週軌跡</button>
+  <button class="tab" data-v="stats"><span class="ic">🍩</span>統計</button>
+  <button class="tab" data-v="goals"><span class="ic">🎯</span>目標</button>
+</nav>
+
+<div class="modal-bg" id="entryModal">
+  <div class="modal">
+    <h3 id="emTitle">補記行程</h3>
+    <div class="field">
+      <label>做了什麼</label>
+      <input id="emText" placeholder="描述這段行程">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>開始</label>
+        <input id="emStart" type="datetime-local">
+      </div>
+      <div class="field">
+        <label>結束</label>
+        <input id="emEnd" type="datetime-local">
+      </div>
+    </div>
+    <div class="field">
+      <label>分類</label>
+      <div class="catpick" id="emCatPick"></div>
+    </div>
+    <div class="field">
+      <label>心情（可選）</label>
+      <div class="catpick" id="emMood"></div>
+    </div>
+    <div class="field">
+      <label>備註（可選）</label>
+      <input id="emNote" placeholder="心得或細節">
+    </div>
+    <div class="modal-btns">
+      <button class="btn ghost" id="emDelete" style="display:none;">刪除</button>
+      <button class="btn ghost" id="emCancel">取消</button>
+      <button class="btn" id="emSave">儲存</button>
+    </div>
   </div>
-  <script>
-    document.getElementById('device').textContent =
-      /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? '手機 / 行動裝置' : '桌機 / 筆電';
-    document.getElementById('width').textContent = window.innerWidth;
-    document.getElementById('time').textContent = new Date().toLocaleString('zh-TW', { hour12: false });
-  </script>
+</div>
+
+<div class="modal-bg" id="goalModal">
+  <div class="modal">
+    <h3>新增目標</h3>
+    <div class="field">
+      <label>目標類型</label>
+      <select id="gmType">
+        <option value="hours">時數型（例：每週運動 ≥ 5 小時）</option>
+        <option value="count">次數型（例：每週讀書 ≥ 3 次）</option>
+        <option value="ratio">比例型（例：工作 ≤ 40%）</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>對象分類</label>
+      <div class="catpick" id="gmCatPick"></div>
+    </div>
+    <div class="field">
+      <label>方向</label>
+      <select id="gmDir">
+        <option value="gte">至少達到（≥）</option>
+        <option value="lte">不超過（≤）</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="gmTargetLabel">目標數值</label>
+      <input id="gmTarget" type="number" step="0.5" placeholder="例如 5">
+      <div class="hint" id="gmHint">時數型：每週小時數</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn ghost" id="gmCancel">取消</button>
+      <button class="btn" id="gmSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'life_tracker_v1';
+const CATS = [
+  { id:'work',     name:'工作', hex:'#8a93b5' },
+  { id:'study',    name:'學習', hex:'#b5a07d' },
+  { id:'exercise', name:'運動', hex:'#c08a6f' },
+  { id:'chore',    name:'家務', hex:'#9b9287' },
+  { id:'leisure',  name:'休閒', hex:'#7faaa0' },
+  { id:'social',   name:'社交', hex:'#c0879b' },
+  { id:'sleep',    name:'睡眠', hex:'#8a86a8' },
+  { id:'other',    name:'其他', hex:'#c3bdb3' },
+];
+const MOODS = ['😊','🙂','😐','😕','😫'];
+const catById = id => CATS.find(c=>c.id===id) || CATS[CATS.length-1];
+
+const KEYWORDS = {
+  work:    ['工作','上班','開會','會議','企劃','提案','報告','專案','客戶','email','郵件','編輯','程式','設計','簡報','業務','處理','回信','文件','合約','報價'],
+  study:   ['讀','學','看書','上課','課程','研究','筆記','複習','背','練習','英文','日文','閱讀','study','聽課'],
+  exercise:['跑','跑步','健身','運動','瑜伽','重訓','散步','走路','游泳','拉伸','伸展','爬山','騎車','打球','gym','workout'],
+  chore:   ['煮','做飯','洗','打掃','整理','家事','買菜','採買','洗衣','晾','拖地','收拾','倒垃圾','洗碗','煮飯','家務'],
+  leisure: ['看劇','追劇','電影','滑手機','遊戲','放鬆','耍廢','聽音樂','podcast','youtube','逛','喝咖啡','發呆','休息','netflix'],
+  social:  ['聚','吃飯','約','見面','聊天','朋友','家人','約會','聚餐','喝酒','派對','陪','通話','視訊','line'],
+  sleep:   ['睡','午睡','小睡','睡覺','補眠','躺','休眠','sleep','nap'],
+};
+function autoClassify(text){
+  const t = text.toLowerCase();
+  const learned = state.learned[t];
+  if(learned) return learned;
+  let best = 'other', bestScore = 0;
+  for(const cat in KEYWORDS){
+    let s = 0;
+    for(const w of KEYWORDS[cat]){ if(t.includes(w.toLowerCase())) s += w.length; }
+    if(s > bestScore){ bestScore = s; best = cat; }
+  }
+  return best;
+}
+
+let state = loadState();
+function loadState(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; return s; }
+  } catch(e){}
+  return { entries: [], goals: [], running: null, learned: {} };
+}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+const pad = n => String(n).padStart(2,'0');
+function fmtTime(ts){ const d=new Date(ts); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function fmtDur(ms){
+  const m = Math.round(ms/60000);
+  if(m<60) return m+' 分';
+  const h=Math.floor(m/60), mm=m%60;
+  return mm? h+' 時 '+mm+' 分' : h+' 小時';
+}
+function dateKey(ts){ const d=new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function localDT(ts){ const d=new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x; }
+
+const $ = id => document.getElementById(id);
+function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function renderRunning(){
+  const slot = $('runningSlot');
+  const live = $('liveBox');
+  if(state.running){
+    live.classList.add('active');
+    const cat = catById(state.running.cat);
+    slot.innerHTML = '<div class="running"><div>'+
+      '<div class="rtxt"><b>'+esc(state.running.text)+'</b></div>'+
+      '<div class="rmeta"><span style="color:'+cat.hex+';font-weight:600">'+cat.name+'</span> · 開始 '+fmtTime(state.running.start)+' · <span class="timer" id="liveTimer"></span></div>'+
+      '</div><button class="btn sm" id="endBtn">結束</button></div>';
+    $('endBtn').onclick = endRunning;
+    tickTimer();
+  } else {
+    live.classList.remove('active');
+    slot.innerHTML = '';
+  }
+}
+let timerInt = null;
+function tickTimer(){
+  if(timerInt) clearInterval(timerInt);
+  const upd = ()=>{ const el=$('liveTimer'); if(el && state.running) el.textContent='已過 '+fmtDur(Date.now()-state.running.start); };
+  upd(); timerInt = setInterval(upd, 30000);
+}
+function startRunning(){
+  const input = $('entryInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(state.running) endRunning();
+  state.running = { text, start: Date.now(), cat: autoClassify(text) };
+  input.value=''; save(); renderRunning();
+}
+function endRunning(){
+  if(!state.running) return;
+  const r = state.running;
+  state.entries.push({
+    id: 'e'+Date.now()+Math.random().toString(36).slice(2,6),
+    text: r.text, cat: r.cat, start: r.start, end: Date.now(), mood:'', note:''
+  });
+  state.running = null; save();
+  renderRunning(); renderAll();
+}
+
+function renderToday(){
+  const today = dateKey(Date.now());
+  const list = state.entries.filter(e=>dateKey(e.start)===today).sort((a,b)=>b.start-a.start);
+  const box = $('todayList');
+  if(!list.length && !state.running){
+    box.innerHTML = '<div class="empty">還沒有記錄。<br>在上面打一句話，按「開始」就會記下時間。</div>';
+    return;
+  }
+  box.innerHTML = '<div class="sect-title">今天</div>' + list.map(entryRow).join('');
+  bindEntryRows();
+}
+function entryRow(e){
+  const cat = catById(e.cat);
+  const dur = e.end ? fmtDur(e.end-e.start) : '進行中';
+  return '<div class="entry" data-id="'+e.id+'">'+
+    '<span class="dot" style="background:'+cat.hex+'"></span>'+
+    '<div class="body">'+
+      '<div class="t1">'+esc(e.text)+' '+(e.mood||'')+'</div>'+
+      '<div class="t2">'+fmtTime(e.start)+'–'+(e.end?fmtTime(e.end):'…')+' · '+cat.name+(e.note?' · '+esc(e.note):'')+'</div>'+
+    '</div>'+
+    '<span class="dur">'+dur+'</span>'+
+  '</div>';
+}
+function bindEntryRows(){
+  document.querySelectorAll('.entry[data-id]').forEach(el=>{
+    el.onclick = ()=> openEntryModal(el.dataset.id);
+  });
+}
+
+let calRef = new Date();
+let calSel = null;
+function renderCal(){
+  const y=calRef.getFullYear(), m=calRef.getMonth();
+  $('calMonth').textContent = y+' 年 '+(m+1)+' 月';
+  const first = new Date(y,m,1);
+  const startPad = (first.getDay()+6)%7;
+  const days = new Date(y,m+1,0).getDate();
+  const wd = ['一','二','三','四','五','六','日'];
+  let html = wd.map(d=>'<div class="wd">'+d+'</div>').join('');
+  for(let i=0;i<startPad;i++) html+='<div class="cal-cell blank"></div>';
+  const todayK = dateKey(Date.now());
+  for(let d=1; d<=days; d++){
+    const k = y+'-'+pad(m+1)+'-'+pad(d);
+    const dayEntries = state.entries.filter(e=>dateKey(e.start)===k);
+    const cats = [...new Set(dayEntries.map(e=>e.cat))].slice(0,5);
+    const bars = cats.map(c=>'<i style="background:'+catById(c).hex+'"></i>').join('');
+    const cls = ['cal-cell', k===todayK?'today':'', k===calSel?'sel':''].join(' ');
+    html += '<div class="'+cls+'" data-k="'+k+'">'+d+'<div class="bars">'+bars+'</div></div>';
+  }
+  $('calGrid').innerHTML = html;
+  document.querySelectorAll('.cal-cell[data-k]').forEach(el=>{
+    el.onclick = ()=>{ calSel = el.dataset.k; renderCal(); renderCalDetail(); };
+  });
+  if(!calSel || calSel.slice(0,7)!==y+'-'+pad(m+1)) $('calDayDetail').innerHTML='';
+}
+function renderCalDetail(){
+  if(!calSel){ $('calDayDetail').innerHTML=''; return; }
+  const list = state.entries.filter(e=>dateKey(e.start)===calSel).sort((a,b)=>a.start-b.start);
+  const box = $('calDayDetail');
+  if(!list.length){ box.innerHTML = '<div class="empty">這天沒有記錄</div>'; return; }
+  box.innerHTML = '<div class="sect-title">'+calSel+'</div>' + list.map(entryRow).join('');
+  bindEntryRows();
+}
+
+let weekRef = startOfWeek(new Date());
+function renderWeek(){
+  const ws = new Date(weekRef);
+  const we = new Date(ws); we.setDate(we.getDate()+6);
+  $('weekLabel').textContent = (ws.getMonth()+1)+'/'+ws.getDate()+' – '+(we.getMonth()+1)+'/'+we.getDate();
+  const wd = ['一','二','三','四','五','六','日'];
+  let html='';
+  for(let i=0;i<7;i++){
+    const day = new Date(ws); day.setDate(day.getDate()+i);
+    const k = dateKey(day.getTime());
+    const list = state.entries.filter(e=>e.end && dateKey(e.start)===k);
+    const total = list.reduce((s,e)=>s+(e.end-e.start),0);
+    let bar='';
+    if(total>0){
+      list.sort((a,b)=>a.start-b.start).forEach(e=>{
+        const w = ((e.end-e.start)/total*100).toFixed(2);
+        bar += '<i style="width:'+w+'%;background:'+catById(e.cat).hex+'" title="'+esc(e.text)+'"></i>';
+      });
+    }
+    html += '<div class="week-row"><span class="wlabel">'+wd[i]+' '+day.getDate()+'</span><div class="week-bar">'+bar+'</div></div>';
+  }
+  $('weekTraj').innerHTML = html;
+  const wsT=ws.getTime(), weT=ws.getTime()+7*864e5;
+  renderPieInto('weekPie', state.entries.filter(e=>e.end && e.start>=wsT && e.start<weT));
+}
+
+function aggregate(entries){
+  const sum = {}; let total=0;
+  entries.forEach(e=>{ if(!e.end) return; const d=e.end-e.start; sum[e.cat]=(sum[e.cat]||0)+d; total+=d; });
+  return { sum, total };
+}
+function pieSVG(sum, total){
+  if(total<=0) return '';
+  let acc=0; const R=52, C=2*Math.PI*R; let segs='';
+  CATS.forEach(cat=>{
+    const v = sum[cat.id]||0; if(!v) return;
+    const frac = v/total;
+    const len = frac*C;
+    segs += '<circle r="'+R+'" cx="64" cy="64" fill="none" stroke="'+cat.hex+'" stroke-width="20" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-acc*C)+'" transform="rotate(-90 64 64)"/>';
+    acc += frac;
+  });
+  return '<svg width="128" height="128" viewBox="0 0 128 128">'+segs+'<circle r="32" cx="64" cy="64" fill="var(--card)"/></svg>';
+}
+function renderPieInto(elId, entries){
+  const agg = aggregate(entries);
+  const sum=agg.sum, total=agg.total;
+  const el = $(elId);
+  if(total<=0){ el.innerHTML = '<div class="empty" style="padding:20px">這段期間沒有已完成的記錄</div>'; return; }
+  const rows = CATS.filter(c=>sum[c.id]).sort((a,b)=>sum[b.id]-sum[a.id]).map(c=>{
+    const pct = (sum[c.id]/total*100).toFixed(1);
+    return '<div class="lrow"><span class="ldot" style="background:'+c.hex+'"></span>'+c.name+
+      '<span class="lpct">'+pct+'% · '+fmtDur(sum[c.id])+'</span></div>';
+  }).join('');
+  el.innerHTML = '<div class="pie-wrap">'+pieSVG(sum,total)+'<div class="legend">'+rows+'</div></div>';
+}
+
+let statRange = 'week';
+function rangeEntries(r){
+  if(r==='week'){ const s=startOfWeek(new Date()).getTime(); return state.entries.filter(e=>e.start>=s); }
+  if(r==='month'){ const d=new Date(); const s=new Date(d.getFullYear(),d.getMonth(),1).getTime(); return state.entries.filter(e=>e.start>=s); }
+  return state.entries;
+}
+function renderStats(){
+  const ents = rangeEntries(statRange);
+  renderPieInto('statPie', ents);
+  renderBlackhole(ents);
+  renderWeekSummary();
+}
+function renderBlackhole(ents){
+  const agg = aggregate(ents);
+  const sum=agg.sum, total=agg.total;
+  const el = $('blackhole');
+  if(total<=0){ el.innerHTML = '<div class="empty" style="padding:14px">尚無資料</div>'; return; }
+  const goalCats = new Set(state.goals.map(g=>g.cat));
+  const flagged = CATS.filter(c=>sum[c.id] && (sum[c.id]/total)>=0.2 && !goalCats.has(c.id) && c.id!=='sleep');
+  if(!flagged.length){ el.innerHTML = '<div class="summary-box">沒有偵測到失衡的時間黑洞 👍</div>'; return; }
+  el.innerHTML = flagged.map(c=>{
+    const pct=(sum[c.id]/total*100).toFixed(0);
+    return '<div class="summary-box" style="margin-bottom:8px"><b>'+c.name+'</b> 佔了 <b>'+pct+'%</b>，而且你還沒為它設目標。要不要關注一下？</div>';
+  }).join('');
+}
+function renderWeekSummary(){
+  const s=startOfWeek(new Date()).getTime();
+  const ents = state.entries.filter(e=>e.end && e.start>=s);
+  const agg = aggregate(ents);
+  const sum=agg.sum, total=agg.total;
+  const el = $('weekSummary');
+  if(total<=0){ el.innerHTML = '本週還沒有記錄，開始記下第一筆吧。'; return; }
+  const top = CATS.filter(c=>sum[c.id]).sort((a,b)=>sum[b.id]-sum[a.id])[0];
+  const goalsDone = state.goals.filter(g=>goalProgress(g).done).length;
+  el.innerHTML = '本週共記錄 <b>'+ents.length+'</b> 筆、總計 <b>'+fmtDur(total)+'</b>。<br>'+
+    '花最多時間在 <b>'+top.name+'</b>（'+(sum[top.id]/total*100).toFixed(0)+'%）。<br>'+
+    '目標達成 <b>'+goalsDone+'/'+state.goals.length+'</b> 項。';
+}
+
+function goalProgress(g){
+  const s=startOfWeek(new Date()).getTime();
+  const wkEnts = state.entries.filter(e=>e.end && e.start>=s);
+  let current=0, unit='';
+  if(g.type==='hours'){ const ms=wkEnts.filter(e=>e.cat===g.cat).reduce((a,e)=>a+(e.end-e.start),0); current=ms/3600000; unit='小時'; }
+  else if(g.type==='count'){ current=wkEnts.filter(e=>e.cat===g.cat).length; unit='次'; }
+  else { const agg=aggregate(wkEnts); current = agg.total? (agg.sum[g.cat]||0)/agg.total*100 : 0; unit='%'; }
+  let pct, done;
+  if(g.dir==='gte'){ pct=g.target? Math.min(current/g.target*100,100):0; done=current>=g.target; }
+  else { pct = g.target? Math.min(current/g.target*100,100):0; done=current<=g.target; }
+  return { current, unit, pct, done };
+}
+function renderGoals(){
+  const box = $('goalList');
+  if(!state.goals.length){ box.innerHTML = '<div class="empty">還沒有目標。<br>按下方按鈕設定第一個。<br><br>支援三種：時數、次數、比例。</div>'; return; }
+  box.innerHTML = state.goals.map(g=>{
+    const p = goalProgress(g);
+    const cat = catById(g.cat);
+    const typeName = {hours:'每週時數', count:'每週次數', ratio:'時間比例'}[g.type];
+    const dirSym = g.dir==='gte'?'≥':'≤';
+    const cur = g.type==='hours'? p.current.toFixed(1) : g.type==='ratio'? p.current.toFixed(0) : p.current;
+    const streak = g.streak||0;
+    return '<div class="goal '+(p.done?'done':'')+'" data-id="'+g.id+'">'+
+      '<div class="gtop"><div>'+
+        '<div class="gname"><span class="dot" style="background:'+cat.hex+';display:inline-block;margin-right:6px"></span>'+cat.name+' '+dirSym+' '+g.target+p.unit+'</div>'+
+        '<div class="gtype">'+typeName+' · '+(p.done?'已達成 ✓':'進行中')+'</div>'+
+      '</div>'+
+      '<button class="del" data-del="'+g.id+'">×</button></div>'+
+      '<div class="progress"><i style="width:'+p.pct.toFixed(0)+'%"></i></div>'+
+      '<div class="gval" style="margin-top:6px">目前 '+cur+p.unit+' / 目標 '+dirSym+' '+g.target+p.unit+'</div>'+
+      (streak>0?'<div class="gstreak">🔥 連續達標 '+streak+' 週</div>':'')+
+    '</div>';
+  }).join('');
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = (ev)=>{ ev.stopPropagation(); if(confirm('刪除這個目標？')){ state.goals=state.goals.filter(g=>g.id!==b.dataset.del); save(); renderGoals(); } };
+  });
+}
+
+let editingId = null;
+let emCat='other', emMoodVal='';
+function buildCatPick(containerId, selected, cb){
+  const el = $(containerId);
+  el.innerHTML = CATS.map(c=>'<button data-c="'+c.id+'" class="'+(c.id===selected?'on':'')+'" style="'+(c.id===selected?'background:'+c.hex:'')+'">'+c.name+'</button>').join('');
+  el.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ el.querySelectorAll('button').forEach(x=>{x.classList.remove('on');x.style.background='';}); b.classList.add('on'); b.style.background=catById(b.dataset.c).hex; cb(b.dataset.c); };
+  });
+}
+function buildMoodPick(selected, cb){
+  const el = $('emMood');
+  el.innerHTML = MOODS.map(m=>'<button data-m="'+m+'" class="'+(m===selected?'on':'')+'" style="'+(m===selected?'background:var(--accent)':'')+'">'+m+'</button>').join('');
+  el.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ el.querySelectorAll('button').forEach(x=>{x.classList.remove('on');x.style.background='';}); b.classList.add('on'); b.style.background='var(--accent)'; cb(b.dataset.m); };
+  });
+}
+function openEntryModal(id){
+  editingId = id;
+  if(id){
+    const e = state.entries.find(x=>x.id===id);
+    $('emTitle').textContent='編輯行程';
+    $('emText').value=e.text; emCat=e.cat; emMoodVal=e.mood||'';
+    $('emStart').value=localDT(e.start);
+    $('emEnd').value=e.end?localDT(e.end):'';
+    $('emNote').value=e.note||'';
+    $('emDelete').style.display='block';
+  } else {
+    $('emTitle').textContent='補記行程';
+    const now=Date.now();
+    $('emText').value=''; emCat='other'; emMoodVal='';
+    $('emStart').value=localDT(now-3600000);
+    $('emEnd').value=localDT(now);
+    $('emNote').value='';
+    $('emDelete').style.display='none';
+  }
+  buildCatPick('emCatPick', emCat, c=>emCat=c);
+  buildMoodPick(emMoodVal, m=>emMoodVal=m);
+  $('entryModal').classList.add('on');
+}
+$('emCancel').onclick = ()=> $('entryModal').classList.remove('on');
+$('emSave').onclick = ()=>{
+  const text=$('emText').value.trim(); if(!text){ alert('請輸入內容'); return; }
+  const start=new Date($('emStart').value).getTime();
+  const end=$('emEnd').value? new Date($('emEnd').value).getTime():null;
+  if(isNaN(start)){ alert('請設定開始時間'); return; }
+  if(end && end<start){ alert('結束時間不能早於開始'); return; }
+  if(editingId){
+    const e=state.entries.find(x=>x.id===editingId);
+    if(e.cat!==emCat) state.learned[e.text.toLowerCase()]=emCat;
+    e.text=text; e.cat=emCat; e.start=start; e.end=end; e.mood=emMoodVal; e.note=$('emNote').value.trim();
+  } else {
+    state.entries.push({ id:'e'+Date.now()+Math.random().toString(36).slice(2,6), text, cat:emCat, start, end, mood:emMoodVal, note:$('emNote').value.trim() });
+  }
+  save(); $('entryModal').classList.remove('on'); renderAll();
+};
+$('emDelete').onclick = ()=>{
+  if(editingId && confirm('刪除這筆記錄？')){ state.entries=state.entries.filter(x=>x.id!==editingId); save(); $('entryModal').classList.remove('on'); renderAll(); }
+};
+
+let gmCat='work';
+const GM_HINTS = { hours:'時數型：每週累計小時數', count:'次數型：每週累計次數', ratio:'比例型：佔總時間的百分比' };
+function openGoalModal(){
+  gmCat='work'; $('gmType').value='hours'; $('gmDir').value='gte'; $('gmTarget').value='';
+  buildCatPick('gmCatPick', gmCat, c=>gmCat=c);
+  $('gmHint').textContent = GM_HINTS.hours;
+  $('goalModal').classList.add('on');
+}
+$('gmType').onchange = ()=>{ $('gmHint').textContent = GM_HINTS[$('gmType').value]; $('gmDir').value = $('gmType').value==='ratio'?'lte':'gte'; };
+$('gmCancel').onclick = ()=> $('goalModal').classList.remove('on');
+$('gmSave').onclick = ()=>{
+  const target=parseFloat($('gmTarget').value);
+  if(isNaN(target)||target<0){ alert('請輸入有效的目標數值'); return; }
+  state.goals.push({ id:'g'+Date.now(), type:$('gmType').value, cat:gmCat, dir:$('gmDir').value, target, streak:0 });
+  save(); $('goalModal').classList.remove('on'); renderGoals();
+};
+$('addGoalBtn').onclick = openGoalModal;
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    tab.classList.add('on');
+    $('v-'+tab.dataset.v).classList.add('on');
+    renderAll();
+  };
+});
+$('prevMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()-1); renderCal(); };
+$('nextMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()+1); renderCal(); };
+$('prevWk').onclick=()=>{ weekRef.setDate(weekRef.getDate()-7); renderWeek(); };
+$('nextWk').onclick=()=>{ weekRef.setDate(weekRef.getDate()+7); renderWeek(); };
+document.querySelectorAll('#rangeTabs button').forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll('#rangeTabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); statRange=b.dataset.r; renderStats(); };
+});
+$('startBtn').onclick = startRunning;
+$('entryInput').addEventListener('keydown', e=>{ if(e.key==='Enter') startRunning(); });
+$('fabAdd').onclick = ()=> openEntryModal(null);
+['entryModal','goalModal'].forEach(id=>{
+  $(id).onclick = e=>{ if(e.target.id===id) $(id).classList.remove('on'); };
+});
+
+function renderAll(){
+  renderRunning();
+  renderToday();
+  renderCal(); renderCalDetail();
+  renderWeek();
+  renderStats();
+  renderGoals();
+}
+renderAll();
+</script>
 </body>
 </html>
