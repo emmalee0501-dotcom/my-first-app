@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="morandi">
+<html lang="zh-Hant" data-theme="morandi" data-time="day">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.4.0</title>
+<title>生活軌跡 · v0.5.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -268,17 +268,74 @@
   .theme-opt .swatches i { width: 18px; height: 18px; border-radius: 6px; }
   .theme-opt .tname { font-size: 13px; color: var(--ink); font-weight: 500; }
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+
+  .ambient {
+    border-radius: 18px; overflow: hidden; margin-bottom: 14px;
+    border: 0.5px solid var(--line2);
+  }
+  .ambient-inner {
+    min-height: 96px; padding: 16px 18px;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 3px;
+  }
+  .ambient-time { font-size: 11px; letter-spacing: 1px; }
+  .ambient-greet { font-size: 15px; font-weight: 500; line-height: 1.5; }
+  /* 清晨 */
+  [data-time="dawn"] .ambient-inner {
+    background:
+      radial-gradient(130px 90px at 22% 18%, #f6e2c4 0%, transparent 60%),
+      radial-gradient(150px 100px at 82% 42%, #f3d8c8 0%, transparent 64%),
+      radial-gradient(170px 110px at 48% 95%, #efd6b8 0%, transparent 70%),
+      linear-gradient(155deg, #faf0e2, #f4e6d4);
+  }
+  [data-time="dawn"] .ambient-time { color: #a9885c; }
+  [data-time="dawn"] .ambient-greet { color: #7c6038; }
+  /* 午後 */
+  [data-time="day"] .ambient-inner {
+    background:
+      radial-gradient(130px 90px at 26% 20%, #e6eee2 0%, transparent 60%),
+      radial-gradient(160px 100px at 80% 46%, #dfe9e4 0%, transparent 64%),
+      radial-gradient(170px 110px at 46% 95%, #e9e3d7 0%, transparent 70%),
+      linear-gradient(155deg, #f3f1ea, #e8ece4);
+  }
+  [data-time="day"] .ambient-time { color: #7d9080; }
+  [data-time="day"] .ambient-greet { color: #4f6256; }
+  /* 黃昏 */
+  [data-time="dusk"] .ambient-inner {
+    background:
+      radial-gradient(130px 90px at 22% 22%, #f3d2b0 0%, transparent 60%),
+      radial-gradient(160px 100px at 82% 44%, #e9b89e 0%, transparent 62%),
+      radial-gradient(170px 110px at 44% 96%, #d9a896 0%, transparent 68%),
+      linear-gradient(155deg, #f6e0cc, #e6c0ac);
+  }
+  [data-time="dusk"] .ambient-time { color: #a06a52; }
+  [data-time="dusk"] .ambient-greet { color: #844f3c; }
+  /* 夜晚 */
+  [data-time="night"] .ambient-inner {
+    background:
+      radial-gradient(120px 80px at 24% 24%, #4a4568 0%, transparent 60%),
+      radial-gradient(150px 100px at 80% 44%, #3e3a58 0%, transparent 64%),
+      radial-gradient(170px 110px at 48% 96%, #322e4a 0%, transparent 70%),
+      linear-gradient(155deg, #353150, #28243a);
+  }
+  [data-time="night"] .ambient-time { color: #c6b186; }
+  [data-time="night"] .ambient-greet { color: #e0d4b8; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.4.0</div>
+    <div class="ver">my-first-app · v0.5.0</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
   <section class="view on" id="v-today">
+    <div class="ambient" id="ambient">
+      <div class="ambient-inner">
+        <span class="ambient-time" id="ambientTime"></span>
+        <span class="ambient-greet" id="ambientGreet"></span>
+      </div>
+    </div>
     <div class="live" id="liveBox">
       <div class="input-row">
         <input id="entryInput" placeholder="現在要做什麼？例如「寫企劃」" autocomplete="off">
@@ -414,6 +471,13 @@
   <div class="modal">
     <h3>選擇主題</h3>
     <div class="theme-grid" id="themeGrid"></div>
+    <h3 style="margin-top:20px;">日夜氛圍</h3>
+    <div class="hint" style="margin-bottom:10px;">頂部橫幅會隨一天時段流動換色</div>
+    <div class="range-tabs" id="ambientTabs">
+      <button data-amb="auto" class="on">自動</button>
+      <button data-amb="day">固定白天</button>
+      <button data-amb="night">固定夜晚</button>
+    </div>
     <div class="modal-btns" style="margin-top:16px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
@@ -871,7 +935,49 @@ function renderThemeGrid(){
   try{ saved = localStorage.getItem(THEME_KEY) || 'morandi'; }catch(e){}
   document.documentElement.setAttribute('data-theme', saved);
 })();
-$('themeBtn').onclick = ()=>{ renderThemeGrid(); $('themeModal').classList.add('on'); };
+
+const AMBIENT_KEY = 'life_tracker_ambient';
+const GREETINGS = {
+  dawn:  { time:'☼ 清晨', greet:'早安，今天想怎麼對待自己？' },
+  day:   { time:'◐ 午後', greet:'午安，記得喝口水、伸個懶腰' },
+  dusk:  { time:'☾ 黃昏', greet:'今天辛苦了，慢下來吧' },
+  night: { time:'✦ 夜晚', greet:'夜深了，讓自己安靜下來' },
+};
+function currentSlot(){
+  const h = new Date().getHours();
+  if(h>=5 && h<11) return 'dawn';
+  if(h>=11 && h<17) return 'day';
+  if(h>=17 && h<20) return 'dusk';
+  return 'night';
+}
+function getAmbientMode(){
+  try{ return localStorage.getItem(AMBIENT_KEY) || 'auto'; }catch(e){ return 'auto'; }
+}
+function applyAmbient(){
+  const mode = getAmbientMode();
+  let slot;
+  if(mode==='day') slot='day';
+  else if(mode==='night') slot='night';
+  else slot=currentSlot();
+  document.documentElement.setAttribute('data-time', slot);
+  const g = GREETINGS[slot];
+  if($('ambientTime')) $('ambientTime').textContent = g.time;
+  if($('ambientGreet')) $('ambientGreet').textContent = g.greet;
+  document.querySelectorAll('#ambientTabs button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.amb===mode);
+  });
+}
+function setAmbientMode(m){
+  try{ localStorage.setItem(AMBIENT_KEY, m); }catch(e){}
+  applyAmbient();
+}
+applyAmbient();
+setInterval(applyAmbient, 60000);
+document.querySelectorAll('#ambientTabs button').forEach(b=>{
+  b.onclick = ()=> setAmbientMode(b.dataset.amb);
+});
+
+$('themeBtn').onclick = ()=>{ renderThemeGrid(); applyAmbient(); $('themeModal').classList.add('on'); };
 $('themeClose').onclick = ()=> $('themeModal').classList.remove('on');
 $('themeModal').onclick = e=>{ if(e.target.id==='themeModal') $('themeModal').classList.remove('on'); };
 
