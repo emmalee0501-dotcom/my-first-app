@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.6.0</title>
+<title>生活軌跡 · v0.6.1</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -11,42 +11,42 @@
     --radius-sm: 12px;
     --shadow: 0 2px 16px rgba(74,69,62,0.05);
   }
-  /* 奶茶陶土（預設） */
+  /* 暮色砂岩（預設） */
   [data-theme="morandi"] {
-    --bg: #f6f1ea; --bg2: #ece2d6; --card: #fdfaf5;
-    --ink: #534840; --ink2: #837468; --ink3: #b8a89c;
-    --line: #efe6da; --line2: #e8dccd;
-    --accent: #c89a82; --accent2: #b8918a;
+    --bg: #f3e9df; --bg2: #e7d6c6; --card: #fbf3ea;
+    --ink: #524339; --ink2: #897564; --ink3: #bca696;
+    --line: #ecdfd0; --line2: #e4d2c0;
+    --accent: #c8906f; --accent2: #b8857a;
     --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #cb9a80;
     --c-chore: #a89c8e; --c-leisure: #94b0a4; --c-social: #c89aa4;
     --c-sleep: #a098b8; --c-spirit: #bc96aa; --c-travel: #aab588; --c-other: #c6bcae;
   }
-  /* 粉奶油 */
+  /* 晨霧玫瑰 */
   [data-theme="cream"] {
-    --bg: #f7efe9; --bg2: #f0e2d8; --card: #fdf9f5;
-    --ink: #5a4a44; --ink2: #8a766c; --ink3: #c2b0a6;
-    --line: #f0e4da; --line2: #ead9cd;
-    --accent: #c89a8e; --accent2: #b88a9a;
+    --bg: #f7ebe9; --bg2: #f0dad9; --card: #fdf4f3;
+    --ink: #5a4348; --ink2: #8c6f74; --ink3: #c4a8ac;
+    --line: #f2dee0; --line2: #ecd0d2;
+    --accent: #c98a96; --accent2: #b885a0;
     --c-work: #a8a4c0; --c-study: #d4b896; --c-exercise: #d49e88;
     --c-chore: #b0a498; --c-leisure: #9cbcb0; --c-social: #d4a0b4;
     --c-sleep: #a8a0c4; --c-spirit: #c4a0bc; --c-travel: #b4c094; --c-other: #ccc0b6;
   }
-  /* 大地金 */
+  /* 秋收麥浪 */
   [data-theme="gold"] {
-    --bg: #f4efe6; --bg2: #e8ddc8; --card: #fcf8f0;
-    --ink: #534a3a; --ink2: #847859; --ink3: #b8ac90;
-    --line: #ece2cf; --line2: #e4d8c0;
-    --accent: #b89a5e; --accent2: #a8895a;
+    --bg: #f5edda; --bg2: #ebdcbc; --card: #fcf6e6;
+    --ink: #534a34; --ink2: #877852; --ink3: #bcae88;
+    --line: #ece0c4; --line2: #e6d6b6;
+    --accent: #c0a052; --accent2: #b09058;
     --c-work: #a0a088; --c-study: #c8ac72; --c-exercise: #c49a72;
     --c-chore: #aaa080; --c-leisure: #9cae8e; --c-social: #c4a088;
     --c-sleep: #a8a088; --c-spirit: #bca088; --c-travel: #b0ac78; --c-other: #c4b896;
   }
-  /* 月夜暗色 */
+  /* 月夜藍調 */
   [data-theme="night"] {
-    --bg: #423c4e; --bg2: #4e4759; --card: #4a4356;
-    --ink: #f0ece2; --ink2: #c4bcc8; --ink3: #948c9c;
-    --line: #564f62; --line2: #5e5668;
-    --accent: #cdb488; --accent2: #bca6aa;
+    --bg: #3c3e50; --bg2: #48495c; --card: #444658;
+    --ink: #f0ece2; --ink2: #bcc0cc; --ink3: #8c909c;
+    --line: #525468; --line2: #5a5c6e;
+    --accent: #c9b486; --accent2: #a8aac0;
     --c-work: #969cba; --c-study: #cdb488; --c-exercise: #c89a84;
     --c-chore: #a098a6; --c-leisure: #8cb4aa; --c-social: #c89aac;
     --c-sleep: #9c94bc; --c-spirit: #b894b0; --c-travel: #a6b88a; --c-other: #a69eac;
@@ -325,7 +325,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.6.0</div>
+    <div class="ver">my-first-app · v0.6.1</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -907,10 +907,10 @@ function renderAll(){
 }
 
 const THEMES = [
-  { id:'morandi', name:'奶茶陶土', desc:'暖沉穩·預設', sw:['#c89a82','#c2af8a','#c89aa4','#94b0a4'] },
-  { id:'cream',   name:'粉奶油',     desc:'溫柔甜美',     sw:['#c89a8e','#d4b896','#d4a0b4','#a8a4c0'] },
-  { id:'gold',    name:'大地金',     desc:'沉穩高級',     sw:['#b89a5e','#c8ac72','#c4a088','#a0a088'] },
-  { id:'night',   name:'月夜暗色',   desc:'夜間不刺眼',   sw:['#c0a878','#80a89e','#bc8ea0','#8a90b0'] },
+  { id:'morandi', name:'暮色砂岩', desc:'暖陶土·預設', sw:['#c8906f','#c2af8a','#c89aa4','#94b0a4'] },
+  { id:'cream',   name:'晨霧玫瑰', desc:'霧粉朦朧',     sw:['#c98a96','#d4b896','#d4a0b4','#a8a4c0'] },
+  { id:'gold',    name:'秋收麥浪', desc:'暖金沉穩',     sw:['#c0a052','#c8ac72','#c4a088','#a0a088'] },
+  { id:'night',   name:'月夜藍調', desc:'夜間靜謐',     sw:['#c9b486','#8cb4aa','#c89aac','#969cba'] },
 ];
 function applyTheme(id){
   document.documentElement.setAttribute('data-theme', id);
