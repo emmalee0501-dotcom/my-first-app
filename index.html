@@ -1,35 +1,55 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="morandi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.3.0</title>
+<title>生活軌跡 · v0.4.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
-    --bg: #f3f0ea;
-    --bg2: #e6e1d8;
-    --card: #fbfaf6;
-    --ink: #4a453e;
-    --ink2: #756f66;
-    --ink3: #b0aaa0;
-    --line: #eae4dc;
-    --line2: #e2dcd2;
-    --accent: #8a9a78;
-    --accent2: #b89a8a;
     --radius: 16px;
     --radius-sm: 12px;
     --shadow: 0 2px 16px rgba(74,69,62,0.05);
-    --c-work: #9aa0b8;
-    --c-study: #c2af8a;
-    --c-exercise: #c49a82;
-    --c-chore: #a39c90;
-    --c-leisure: #8fb0a6;
-    --c-social: #c79aac;
-    --c-sleep: #9a96b5;
-    --c-spirit: #b596ab;
-    --c-travel: #a7b585;
-    --c-other: #c3bdb3;
+  }
+  /* 莫蘭迪霧綠（預設） */
+  [data-theme="morandi"] {
+    --bg: #f3f0ea; --bg2: #e6e1d8; --card: #fbfaf6;
+    --ink: #4a453e; --ink2: #756f66; --ink3: #b0aaa0;
+    --line: #eae4dc; --line2: #e2dcd2;
+    --accent: #8a9a78; --accent2: #b89a8a;
+    --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #c49a82;
+    --c-chore: #a39c90; --c-leisure: #8fb0a6; --c-social: #c79aac;
+    --c-sleep: #9a96b5; --c-spirit: #b596ab; --c-travel: #a7b585; --c-other: #c3bdb3;
+  }
+  /* 粉奶油 */
+  [data-theme="cream"] {
+    --bg: #f7efe9; --bg2: #f0e2d8; --card: #fdf9f5;
+    --ink: #5a4a44; --ink2: #8a766c; --ink3: #c2b0a6;
+    --line: #f0e4da; --line2: #ead9cd;
+    --accent: #c89a8e; --accent2: #b88a9a;
+    --c-work: #a8a4c0; --c-study: #d4b896; --c-exercise: #d49e88;
+    --c-chore: #b0a498; --c-leisure: #9cbcb0; --c-social: #d4a0b4;
+    --c-sleep: #a8a0c4; --c-spirit: #c4a0bc; --c-travel: #b4c094; --c-other: #ccc0b6;
+  }
+  /* 大地金 */
+  [data-theme="gold"] {
+    --bg: #f4efe6; --bg2: #e8ddc8; --card: #fcf8f0;
+    --ink: #534a3a; --ink2: #847859; --ink3: #b8ac90;
+    --line: #ece2cf; --line2: #e4d8c0;
+    --accent: #b89a5e; --accent2: #a8895a;
+    --c-work: #a0a088; --c-study: #c8ac72; --c-exercise: #c49a72;
+    --c-chore: #aaa080; --c-leisure: #9cae8e; --c-social: #c4a088;
+    --c-sleep: #a8a088; --c-spirit: #bca088; --c-travel: #b0ac78; --c-other: #c4b896;
+  }
+  /* 月夜暗色 */
+  [data-theme="night"] {
+    --bg: #2a2733; --bg2: #38343f; --card: #353141;
+    --ink: #e8e4d8; --ink2: #b0aaba; --ink3: #807a8a;
+    --line: #423d4e; --line2: #4a4555;
+    --accent: #c0a878; --accent2: #b09a9e;
+    --c-work: #8a90b0; --c-study: #c0a878; --c-exercise: #bc8e78;
+    --c-chore: #948c9a; --c-leisure: #80a89e; --c-social: #bc8ea0;
+    --c-sleep: #9088b0; --c-spirit: #ac88a4; --c-travel: #9aac7e; --c-other: #9a92a0;
   }
   body {
     font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
@@ -59,7 +79,7 @@
   .input-row input {
     flex: 1;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--card);
     border-radius: 12px;
     padding: 12px 14px;
     font-size: 15px;
@@ -211,7 +231,7 @@
   .field label { display: block; font-size: 13px; color: var(--ink2); margin-bottom: 6px; }
   .field input, .field select {
     width: 100%; border: 1px solid var(--line); border-radius: 12px;
-    padding: 11px 13px; font-size: 15px; font-family: inherit; background: #fff; color: var(--ink); outline: none;
+    padding: 11px 13px; font-size: 15px; font-family: inherit; background: var(--card); color: var(--ink); outline: none;
   }
   .field input:focus, .field select:focus { border-color: var(--accent); }
   .row2 { display: flex; gap: 10px; }
@@ -220,7 +240,7 @@
   .modal-btns .btn { flex: 1; }
   .catpick { display: flex; flex-wrap: wrap; gap: 6px; }
   .catpick button {
-    border: 1px solid var(--line); background: #fff; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--card); border-radius: 20px;
     padding: 6px 12px; font-size: 13px; font-family: inherit; cursor: pointer; color: var(--ink2);
   }
   .catpick button.on { color: #fff; border-color: transparent; }
@@ -232,13 +252,30 @@
   }
   .summary-box { background: var(--bg); border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.9; color: var(--ink2); }
   .summary-box b { color: var(--ink); }
+  #themeBtn {
+    position: absolute; top: 20px; right: 16px;
+    background: var(--card); border: 0.5px solid var(--line2); color: var(--ink2);
+    font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 20px; cursor: pointer;
+  }
+  header { position: relative; }
+  .theme-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .theme-opt {
+    border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px; cursor: pointer;
+    background: var(--card); text-align: left;
+  }
+  .theme-opt.on { border-color: var(--accent); }
+  .theme-opt .swatches { display: flex; gap: 4px; margin-bottom: 8px; }
+  .theme-opt .swatches i { width: 18px; height: 18px; border-radius: 6px; }
+  .theme-opt .tname { font-size: 13px; color: var(--ink); font-weight: 500; }
+  .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.3.0</div>
+    <div class="ver">my-first-app · v0.4.0</div>
+    <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
   <section class="view on" id="v-today">
@@ -373,20 +410,33 @@
   </div>
 </div>
 
+<div class="modal-bg" id="themeModal">
+  <div class="modal">
+    <h3>選擇主題</h3>
+    <div class="theme-grid" id="themeGrid"></div>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="btn ghost" id="themeClose">完成</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORE_KEY = 'life_tracker_v1';
-const CATS = [
-  { id:'work',     name:'工作', hex:'#9aa0b8' },
-  { id:'study',    name:'學習', hex:'#c2af8a' },
-  { id:'exercise', name:'運動', hex:'#c49a82' },
-  { id:'chore',    name:'家務', hex:'#a39c90' },
-  { id:'leisure',  name:'休閒', hex:'#8fb0a6' },
-  { id:'social',   name:'社交', hex:'#c79aac' },
-  { id:'sleep',    name:'睡眠', hex:'#9a96b5' },
-  { id:'spirit',   name:'心靈成長', hex:'#b596ab' },
-  { id:'travel',   name:'旅行·探索', hex:'#a7b585' },
-  { id:'other',    name:'其他', hex:'#c3bdb3' },
+const THEME_KEY = 'life_tracker_theme';
+const CAT_DEFS = [
+  { id:'work',     name:'工作' },
+  { id:'study',    name:'學習' },
+  { id:'exercise', name:'運動' },
+  { id:'chore',    name:'家務' },
+  { id:'leisure',  name:'休閒' },
+  { id:'social',   name:'社交' },
+  { id:'sleep',    name:'睡眠' },
+  { id:'spirit',   name:'心靈成長' },
+  { id:'travel',   name:'旅行·探索' },
+  { id:'other',    name:'其他' },
 ];
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#c3bdb3'; }
+const CATS = CAT_DEFS.map(c => ({ id:c.id, name:c.name, get hex(){ return cssVar('--c-'+c.id); } }));
 const MOODS = ['😊','🙂','😐','😕','😫'];
 const catById = id => CATS.find(c=>c.id===id) || CATS[CATS.length-1];
 
@@ -791,6 +841,40 @@ function renderAll(){
   renderStats();
   renderGoals();
 }
+
+const THEMES = [
+  { id:'morandi', name:'莫蘭迪霧綠', desc:'柔和大地·預設', sw:['#8a9a78','#c2af8a','#c79aac','#9aa0b8'] },
+  { id:'cream',   name:'粉奶油',     desc:'溫柔甜美',     sw:['#c89a8e','#d4b896','#d4a0b4','#a8a4c0'] },
+  { id:'gold',    name:'大地金',     desc:'沉穩高級',     sw:['#b89a5e','#c8ac72','#c4a088','#a0a088'] },
+  { id:'night',   name:'月夜暗色',   desc:'夜間不刺眼',   sw:['#c0a878','#80a89e','#bc8ea0','#8a90b0'] },
+];
+function applyTheme(id){
+  document.documentElement.setAttribute('data-theme', id);
+  try{ localStorage.setItem(THEME_KEY, id); }catch(e){}
+  renderThemeGrid();
+  renderAll();
+}
+function renderThemeGrid(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  $('themeGrid').innerHTML = THEMES.map(t=>`
+    <button class="theme-opt ${t.id===cur?'on':''}" data-theme-id="${t.id}">
+      <div class="swatches">${t.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</div>
+      <div class="tname">${t.name}</div>
+      <div class="tdesc">${t.desc}</div>
+    </button>`).join('');
+  $('themeGrid').querySelectorAll('[data-theme-id]').forEach(b=>{
+    b.onclick = ()=> applyTheme(b.dataset.themeId);
+  });
+}
+(function initTheme(){
+  let saved = 'morandi';
+  try{ saved = localStorage.getItem(THEME_KEY) || 'morandi'; }catch(e){}
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+$('themeBtn').onclick = ()=>{ renderThemeGrid(); $('themeModal').classList.add('on'); };
+$('themeClose').onclick = ()=> $('themeModal').classList.remove('on');
+$('themeModal').onclick = e=>{ if(e.target.id==='themeModal') $('themeModal').classList.remove('on'); };
+
 renderAll();
 </script>
 </body>
