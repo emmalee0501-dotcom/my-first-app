@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.6.1</title>
+<title>生活軌跡 · v0.7.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -277,6 +277,12 @@
     min-height: 96px; padding: 16px 18px;
     display: flex; flex-direction: column; justify-content: flex-end; gap: 3px;
   }
+  .companion-reply {
+    margin-top: 12px; padding: 11px 14px;
+    background: var(--bg); border-radius: 12px; border-top-left-radius: 4px;
+    font-size: 13px; color: var(--ink2); line-height: 1.6;
+  }
+  @keyframes fadeInReply { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .ambient-time { font-size: 11px; letter-spacing: 1px; }
   .ambient-greet { font-size: 15px; font-weight: 500; line-height: 1.5; }
   /* 清晨 */
@@ -325,7 +331,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.6.1</div>
+    <div class="ver">my-first-app · v0.7.0</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -342,6 +348,7 @@
         <button class="btn" id="startBtn">開始</button>
       </div>
       <div id="runningSlot"></div>
+      <div id="replySlot"></div>
     </div>
     <div id="todayList"></div>
   </section>
@@ -586,8 +593,10 @@ function startRunning(){
   const text = input.value.trim();
   if(!text) return;
   if(state.running) endRunning();
-  state.running = { text, start: Date.now(), cat: autoClassify(text) };
+  const cat = autoClassify(text);
+  state.running = { text, start: Date.now(), cat };
   input.value=''; save(); renderRunning();
+  showCompanionReply(companionReply(cat));
 }
 function endRunning(){
   if(!state.running) return;
@@ -608,7 +617,10 @@ function renderToday(){
     box.innerHTML = '<div class="empty">還沒有記錄。<br>在上面打一句話，按「開始」就會記下時間。</div>';
     return;
   }
-  box.innerHTML = '<div class="sect-title">今天</div>' + list.map(entryRow).join('');
+  const todayCount = list.length;
+  let head = '今天';
+  if(todayCount>0) head = '今天 · 第 '+todayCount+' 個片刻';
+  box.innerHTML = '<div class="sect-title">'+head+'</div>' + list.map(entryRow).join('');
   bindEntryRows();
 }
 function entryRow(e){
@@ -938,11 +950,57 @@ function renderThemeGrid(){
 
 const AMBIENT_KEY = 'life_tracker_ambient';
 const GREETINGS = {
-  dawn:  { time:'☼ 清晨', greet:'早安，今天想怎麼對待自己？' },
-  day:   { time:'◐ 午後', greet:'午安，記得喝口水、伸個懶腰' },
-  dusk:  { time:'☾ 黃昏', greet:'今天辛苦了，慢下來吧' },
-  night: { time:'✦ 夜晚', greet:'夜深了，讓自己安靜下來' },
+  dawn:  { time:'☼ 清晨', greets:[
+    '早安，今天想怎麼對待自己？',
+    '新的一天，慢慢來就好',
+    '早安，先深呼吸一口氣吧',
+    '願你今天，溫柔而堅定',
+    '早安，今天也陪你一起',
+  ]},
+  day:   { time:'◐ 午後', greets:[
+    '午安，記得喝口水、伸個懶腰',
+    '午後了，給自己一點喘息',
+    '忙了一上午，停下來一下下',
+    '午安，你做得很好了',
+    '記得抬頭看看窗外',
+  ]},
+  dusk:  { time:'☾ 黃昏', greets:[
+    '今天辛苦了，慢下來吧',
+    '黃昏了，把肩膀放鬆一點',
+    '一天快過完了，謝謝你的努力',
+    '夕陽很溫柔，你也是',
+    '傍晚了，吃頓好的吧',
+  ]},
+  night: { time:'✦ 夜晚', greets:[
+    '夜深了，讓自己安靜下來',
+    '今天就到這裡，好好休息',
+    '謝謝今天努力的你',
+    '夜晚是留給自己的時間',
+    '放下今天，明天再說',
+  ]},
 };
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// 夥伴依分類的即時暖心回應
+const REPLIES = {
+  work:    ['專注的你很迷人，記得中場起來動一動','工作辛苦了，別忘了喝水','一件一件來，你可以的','忙的時候，也記得呼吸'],
+  study:   ['享受這段學習的時光','為自己充電，是很棒的事','一點一滴都會累積成你','靜下心來的你，真好'],
+  exercise:['身體會謝謝你的 ✨','動一動，心情也會變好','你正在好好照顧自己','流點汗，把煩惱也帶走'],
+  chore:   ['把生活整理好，心也會清爽','這些小事，都是在照顧自己','謝謝你把日子打理得這麼好','做完會很有成就感的'],
+  leisure: ['好好放鬆，你值得的','耍廢也是一種照顧自己','享受這段屬於你的時間','偶爾停下來，沒關係的'],
+  social:  ['和喜歡的人相處，會充電的','好好享受這段陪伴','人與人的溫度，很珍貴','記得也把今天的好心情留住'],
+  sleep:   ['好好休息，明天會更好','睡飽是對自己最好的溫柔','放下今天，安心睡吧','願你有個好夢'],
+  spirit:  ['給自己一點安靜的時間，真好','你正在更靠近自己','這份覺察，很珍貴','慢慢來，你正在成長'],
+  travel:  ['探索世界的你，閃閃發光','把美好的風景收進心裡','旅途愉快，好好感受當下','換個地方，換個心情'],
+  other:   ['好好記錄當下的自己','謝謝你願意停下來記錄','每個片刻都值得被看見','我在這裡，陪著你'],
+};
+function companionReply(cat){ return pick(REPLIES[cat] || REPLIES.other); }
+function showCompanionReply(text){
+  const slot = $('replySlot');
+  if(!slot) return;
+  slot.innerHTML = '<div class="companion-reply">'+esc(text)+'</div>';
+  slot.querySelector('.companion-reply').style.animation = 'fadeInReply 0.5s ease';
+}
 function currentSlot(){
   const h = new Date().getHours();
   if(h>=5 && h<11) return 'dawn';
@@ -953,6 +1011,7 @@ function currentSlot(){
 function getAmbientMode(){
   try{ return localStorage.getItem(AMBIENT_KEY) || 'auto'; }catch(e){ return 'auto'; }
 }
+let _ambientGreetCache = { slot:null, text:'' };
 function applyAmbient(){
   const mode = getAmbientMode();
   let slot;
@@ -962,7 +1021,11 @@ function applyAmbient(){
   document.documentElement.setAttribute('data-time', slot);
   const g = GREETINGS[slot];
   if($('ambientTime')) $('ambientTime').textContent = g.time;
-  if($('ambientGreet')) $('ambientGreet').textContent = g.greet;
+  // 問候語只在時段改變時換一句，避免每分鐘跳動
+  if(_ambientGreetCache.slot !== slot){
+    _ambientGreetCache = { slot, text: pick(g.greets) };
+  }
+  if($('ambientGreet')) $('ambientGreet').textContent = _ambientGreetCache.text;
   document.querySelectorAll('#ambientTabs button').forEach(b=>{
     b.classList.toggle('on', b.dataset.amb===mode);
   });
