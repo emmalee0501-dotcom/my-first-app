@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.8.0</title>
+<title>生活軌跡 · v0.8.1</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -302,6 +302,11 @@
   .plan-task .tlabel { flex: 1; cursor: pointer; }
   .plan-del { background: none; border: none; color: var(--ink3); font-size: 18px; cursor: pointer; }
   .reward-box { background: var(--bg); border-radius: 12px; padding: 14px; margin-top: 10px; font-size: 13px; color: var(--ink2); line-height: 1.7; text-align: center; animation: fadeInReply 0.5s ease; }
+  .wish-switch { font-size: 12px; color: var(--ink3); margin-top: 12px; line-height: 1.8; }
+  .wish-switch button { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
+  .plan-addstep { margin-top: 8px; }
+  .plan-addstep .stepAdd { width: 100%; border: 1px dashed var(--line2); background: transparent; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: var(--ink); outline: none; }
+  .plan-addstep .stepAdd:focus { border-color: var(--accent); border-style: solid; }
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
@@ -348,7 +353,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.8.0</div>
+    <div class="ver">my-first-app · v0.8.1</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1052,6 +1057,12 @@ function classifyWish(text){
   }
   return best;
 }
+// 判斷願望是「專案型」(想完成某件事)還是「習慣型」(想養成日常)
+const PROJECT_SIGNALS = ['完成','做完','建立','建置','蓋','辦','舉辦','寫完','寫一','做一','製作','開發','上線','推出','交出','交件','搞定','弄完','完工','達成目標','專案','計畫案','企劃','報告','論文','作品','一場','一個系統','系統','網站','app','產品','活動'];
+function isProjectWish(text){
+  const t=text.toLowerCase();
+  return PROJECT_SIGNALS.some(w=>t.includes(w.toLowerCase()));
+}
 // 每類的溫柔小行動庫（具體、可行、不壓迫）
 const PLAN_BANK = {
   rest: ['睡前 30 分鐘放下手機','今晚比昨天早 15 分鐘上床','起床後先喝一杯溫水','睡前寫三行今天的小記','白天累了就閉眼休息 5 分鐘','固定一個睡前小儀式（泡腳或伸展）'],
@@ -1070,31 +1081,52 @@ const REWARDS = [
   '溫柔對待自己的一天，謝謝你',
 ];
 
+let _lastWish = { text:'', cat:'other', mode:'habit' };
 function suggestPlans(){
   const input=$('wishInput'); const text=input.value.trim();
   if(!text) return;
   const cat=classifyWish(text);
-  const pool=[...PLAN_BANK[cat]];
-  // 隨機取 3 個
-  const picks=[];
-  while(picks.length<3 && pool.length){ picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
-  const box=$('wishResult');
-  box.innerHTML='<div class="wish-sub" style="margin-top:14px;margin-bottom:4px;">我聽見了「'+esc(text)+'」，這裡有幾個溫柔的小步驟，挑你想試的：</div>'+
-    picks.map((p,i)=>'<div class="plan-opt" data-plan="'+esc(p)+'"><span class="pick"></span><span>'+esc(p)+'</span></div>').join('');
-  box.querySelectorAll('.plan-opt').forEach(el=>{
-    el.onclick=()=>{
-      const planText=el.dataset.plan;
-      addPlanTask(text, cat, planText);
-      el.classList.add('added');
-      el.querySelector('.pick').textContent='✓';
-    };
-  });
+  const mode= isProjectWish(text) ? 'project' : 'habit';
+  _lastWish = { text, cat, mode };
+  renderWishResult();
 }
-function addPlanTask(wish, cat, taskText){
+function renderWishResult(){
+  const { text, cat, mode } = _lastWish;
+  const box=$('wishResult');
+  const switchLine = mode==='habit'
+    ? '<div class="wish-switch">這比較像「想完成的一件事」嗎？<button id="switchMode">切換成專案型</button></div>'
+    : '<div class="wish-switch">這比較像「想養成的習慣」嗎？<button id="switchMode">切換成習慣型</button></div>';
+
+  if(mode==='habit'){
+    const pool=[...PLAN_BANK[cat]];
+    const picks=[];
+    while(picks.length<3 && pool.length){ picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+    box.innerHTML='<div class="wish-sub" style="margin-top:14px;margin-bottom:4px;">我聽見了「'+esc(text)+'」，這是個想養成的習慣 — 挑幾個溫柔的小步驟試試：</div>'+
+      picks.map(p=>'<div class="plan-opt" data-plan="'+esc(p)+'"><span class="pick"></span><span>'+esc(p)+'</span></div>').join('')+
+      switchLine;
+    box.querySelectorAll('.plan-opt').forEach(el=>{
+      el.onclick=()=>{ addPlanTask(text, cat, 'habit', el.dataset.plan); el.classList.add('added'); el.querySelector('.pick').textContent='✓'; };
+    });
+  } else {
+    box.innerHTML='<div class="wish-sub" style="margin-top:14px;margin-bottom:8px;">我聽見了「'+esc(text)+'」，這像是一件想完成的事 — 把它拆成幾個步驟，一步步推進：</div>'+
+      '<div class="input-row"><input id="stepInput" placeholder="加一個步驟，例如「列出需求」" autocomplete="off"><button class="btn" id="addStepBtn">加入</button></div>'+
+      '<div class="wish-sub" style="margin-top:8px;">想不到？這些通用步驟給你參考：<br>釐清想完成的樣子 · 拆成 3 小塊 · 先做最小的一塊 · 完成後檢視調整</div>'+
+      switchLine;
+    const addStep=()=>{
+      const si=$('stepInput'); const st=si.value.trim(); if(!st) return;
+      addPlanTask(text, cat, 'project', st); si.value=''; si.focus();
+    };
+    $('addStepBtn').onclick=addStep;
+    $('stepInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addStep(); });
+  }
+  const sw=$('switchMode');
+  if(sw) sw.onclick=()=>{ _lastWish.mode = mode==='habit'?'project':'habit'; renderWishResult(); };
+}
+function addPlanTask(wish, cat, mode, taskText){
   // 找有沒有同願望的計畫卡，沒有就建一張
   let plan=state.plans.find(p=>p.wish===wish && p.cat===cat && !p.archived);
   if(!plan){
-    plan={ id:'p'+Date.now()+Math.random().toString(36).slice(2,5), wish, cat, tasks:[], created:Date.now() };
+    plan={ id:'p'+Date.now()+Math.random().toString(36).slice(2,5), wish, cat, mode:mode||'habit', tasks:[], created:Date.now() };
     state.plans.push(plan);
   }
   if(!plan.tasks.some(t=>t.text===taskText)){
@@ -1131,15 +1163,28 @@ function renderActivePlans(){
   if(!plans.length){ box.innerHTML=''; return; }
   box.innerHTML='<div class="sect-title">我的行動計畫</div>'+plans.map(p=>{
     const done=p.tasks.filter(t=>t.done).length;
+    const pct=Math.round(done/p.tasks.length*100);
+    const isProj = p.mode==='project';
+    const typeLabel = isProj ? '專案' : WISH_CAT_NAME[p.cat];
+    const progress = isProj
+      ? '<div class="progress" style="margin:8px 0"><i style="width:'+pct+'%"></i></div><div class="wish-sub" style="margin:0 0 6px">完成度 '+pct+'%（'+done+'/'+p.tasks.length+'）</div>'
+      : '';
     return '<div class="plan-card" data-plan-id="'+p.id+'">'+
       '<div class="pc-head"><span class="pc-wish">願望：'+esc(p.wish)+'</span>'+
-      '<span class="wish-sub" style="margin:0">'+WISH_CAT_NAME[p.cat]+' · '+done+'/'+p.tasks.length+'</span></div>'+
+      '<span class="wish-sub" style="margin:0">'+typeLabel+' · '+done+'/'+p.tasks.length+'</span></div>'+
+      progress+
       p.tasks.map(t=>'<div class="plan-task '+(t.done?'done':'')+'" data-task="'+t.id+'">'+
         '<span class="tick" data-act="toggle">'+(t.done?'✓':'')+'</span>'+
         '<span class="tlabel" data-act="toggle">'+esc(t.text)+'</span>'+
         '<button class="plan-del" data-act="del">×</button></div>').join('')+
+      (isProj ? '<div class="plan-addstep"><input class="stepAdd" data-plan="'+p.id+'" placeholder="再加一個步驟…" autocomplete="off"></div>' : '')+
     '</div>';
   }).join('');
+  box.querySelectorAll('.stepAdd').forEach(inp=>{
+    inp.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ const v=inp.value.trim(); if(!v) return; const p=state.plans.find(x=>x.id===inp.dataset.plan); if(p){ addPlanTask(p.wish,p.cat,'project',v); } }
+    });
+  });
   box.querySelectorAll('.plan-card').forEach(card=>{
     const pid=card.dataset.planId;
     card.querySelectorAll('.plan-task').forEach(row=>{
