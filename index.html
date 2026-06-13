@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.7.0</title>
+<title>生活軌跡 · v0.8.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -285,6 +285,23 @@
   @keyframes fadeInReply { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .ambient-time { font-size: 11px; letter-spacing: 1px; }
   .ambient-greet { font-size: 15px; font-weight: 500; line-height: 1.5; }
+  .wish-box { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .wish-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .wish-sub { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+  .plan-opt { background: var(--bg); border: 1px solid var(--line2); border-radius: 12px; padding: 12px 14px; margin-top: 8px; cursor: pointer; font-size: 14px; color: var(--ink); line-height: 1.5; display: flex; align-items: center; gap: 10px; }
+  .plan-opt:active { opacity: 0.7; }
+  .plan-opt .pick { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--accent); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+  .plan-opt.added .pick { background: var(--accent); }
+  .plan-card { background: var(--card); border: 0.5px solid var(--line2); border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .plan-card .pc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .plan-card .pc-wish { font-size: 13px; color: var(--ink2); }
+  .plan-task { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; color: var(--ink); }
+  .plan-task .tick { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--line2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; cursor: pointer; }
+  .plan-task.done .tick { background: var(--accent); border-color: var(--accent); }
+  .plan-task.done .tlabel { color: var(--ink3); text-decoration: line-through; }
+  .plan-task .tlabel { flex: 1; cursor: pointer; }
+  .plan-del { background: none; border: none; color: var(--ink3); font-size: 18px; cursor: pointer; }
+  .reward-box { background: var(--bg); border-radius: 12px; padding: 14px; margin-top: 10px; font-size: 13px; color: var(--ink2); line-height: 1.7; text-align: center; animation: fadeInReply 0.5s ease; }
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
@@ -331,7 +348,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.7.0</div>
+    <div class="ver">my-first-app · v0.8.0</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -388,8 +405,22 @@
   </section>
 
   <section class="view" id="v-goals">
+    <div class="wish-box">
+      <div class="wish-title">許一個願望</div>
+      <div class="wish-sub">說一句你想達成的，我陪你想幾個溫柔的小步驟</div>
+      <div class="input-row">
+        <input id="wishInput" placeholder="例如「我想早睡」「想多運動」" autocomplete="off">
+        <button class="btn" id="wishBtn">許願</button>
+      </div>
+      <div id="wishResult"></div>
+    </div>
+
+    <div id="activePlans"></div>
+
+    <div class="sect-title" style="margin-top:22px;">數據型目標</div>
+    <div class="wish-sub" style="margin:0 4px 10px;">追蹤每週時數／次數／比例</div>
     <div id="goalList"></div>
-    <button class="btn" id="addGoalBtn" style="width:100%;margin-top:8px;">＋ 新增目標</button>
+    <button class="btn ghost" id="addGoalBtn" style="width:100%;margin-top:8px;">＋ 新增數據型目標</button>
   </section>
 </div>
 
@@ -544,9 +575,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {} };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [] };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -885,6 +916,8 @@ $('gmSave').onclick = ()=>{
   save(); $('goalModal').classList.remove('on'); renderGoals();
 };
 $('addGoalBtn').onclick = openGoalModal;
+$('wishBtn').onclick = suggestPlans;
+$('wishInput').addEventListener('keydown', e=>{ if(e.key==='Enter') suggestPlans(); });
 
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.onclick = ()=>{
@@ -916,6 +949,7 @@ function renderAll(){
   renderWeek();
   renderStats();
   renderGoals();
+  renderActivePlans();
 }
 
 const THEMES = [
@@ -1001,6 +1035,121 @@ function showCompanionReply(text){
   slot.innerHTML = '<div class="companion-reply">'+esc(text)+'</div>';
   slot.querySelector('.companion-reply').style.animation = 'fadeInReply 0.5s ease';
 }
+
+/* ============ 願望 → 行動計畫 ============ */
+const WISH_KEYWORDS = {
+  rest:    ['睡','早睡','作息','賴床','熬夜','補眠','晚睡','規律','起床','早起','精神','疲','累','休息','放鬆','喝水','水','三餐','吃飯','飲食','節奏'],
+  body:    ['運動','動','瘦','減重','體重','體態','身材','健身','肌肉','伸展','柔軟','游泳','跑','走','活動','身體','輕盈','痠痛','肩頸','腰'],
+  study:   ['學','讀','書','看書','背','考','課','進修','英文','日文','語言','技能','專注','作業','論文','知識','成長','學習'],
+  emotion: ['情緒','心情','焦慮','壓力','煩','難過','低落','平靜','安定','覺察','冥想','正念','感恩','療','放下','沉澱','穩定','安頓','內在'],
+};
+function classifyWish(text){
+  const t = text.toLowerCase();
+  let best='other', score=0;
+  for(const k in WISH_KEYWORDS){
+    let s=0; for(const w of WISH_KEYWORDS[k]){ if(t.includes(w)) s+=w.length; }
+    if(s>score){ score=s; best=k; }
+  }
+  return best;
+}
+// 每類的溫柔小行動庫（具體、可行、不壓迫）
+const PLAN_BANK = {
+  rest: ['睡前 30 分鐘放下手機','今晚比昨天早 15 分鐘上床','起床後先喝一杯溫水','睡前寫三行今天的小記','白天累了就閉眼休息 5 分鐘','固定一個睡前小儀式（泡腳或伸展）'],
+  body: ['飯後散步 10 分鐘','起身伸展 5 分鐘','今天爬一次樓梯','做 10 下深呼吸＋擴胸','睡前簡單拉筋 5 分鐘','找一首歌的時間動一動身體'],
+  study: ['專注讀 15 分鐘就好','睡前看 5 頁書','把學到的一件事寫下來','今天背 5 個新單字','找一支 10 分鐘的教學影片看','學完用自己的話講一次'],
+  emotion: ['寫下今天三件小事','安靜深呼吸 3 分鐘','給自己一句溫柔的話','觀察此刻的心情，不評斷','放一首讓你安心的音樂','把煩惱寫下來，先放著'],
+  other: ['為這件事跨出最小的一步','今天先做 5 分鐘就好','把它拆成一個小到不會抗拒的動作','寫下你為什麼想完成它'],
+};
+const WISH_CAT_NAME = { rest:'生活作息', body:'身心養護', study:'學習成長', emotion:'情緒覺察', other:'其他' };
+const REWARDS = [
+  '今天可以給自己一杯喜歡的茶 🍵',
+  '你願意照顧今天的自己，這很棒',
+  '完成了！給自己一個深呼吸的獎勵',
+  '小小的一步，也是前進。我看見了',
+  '今天值得一點點犒賞，你說了算',
+  '溫柔對待自己的一天，謝謝你',
+];
+
+function suggestPlans(){
+  const input=$('wishInput'); const text=input.value.trim();
+  if(!text) return;
+  const cat=classifyWish(text);
+  const pool=[...PLAN_BANK[cat]];
+  // 隨機取 3 個
+  const picks=[];
+  while(picks.length<3 && pool.length){ picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+  const box=$('wishResult');
+  box.innerHTML='<div class="wish-sub" style="margin-top:14px;margin-bottom:4px;">我聽見了「'+esc(text)+'」，這裡有幾個溫柔的小步驟，挑你想試的：</div>'+
+    picks.map((p,i)=>'<div class="plan-opt" data-plan="'+esc(p)+'"><span class="pick"></span><span>'+esc(p)+'</span></div>').join('');
+  box.querySelectorAll('.plan-opt').forEach(el=>{
+    el.onclick=()=>{
+      const planText=el.dataset.plan;
+      addPlanTask(text, cat, planText);
+      el.classList.add('added');
+      el.querySelector('.pick').textContent='✓';
+    };
+  });
+}
+function addPlanTask(wish, cat, taskText){
+  // 找有沒有同願望的計畫卡，沒有就建一張
+  let plan=state.plans.find(p=>p.wish===wish && p.cat===cat && !p.archived);
+  if(!plan){
+    plan={ id:'p'+Date.now()+Math.random().toString(36).slice(2,5), wish, cat, tasks:[], created:Date.now() };
+    state.plans.push(plan);
+  }
+  if(!plan.tasks.some(t=>t.text===taskText)){
+    plan.tasks.push({ id:'t'+Date.now()+Math.random().toString(36).slice(2,5), text:taskText, done:false });
+  }
+  save(); renderActivePlans();
+}
+function toggleTask(planId, taskId){
+  const plan=state.plans.find(p=>p.id===planId); if(!plan) return;
+  const task=plan.tasks.find(t=>t.id===taskId); if(!task) return;
+  task.done=!task.done; save();
+  renderActivePlans();
+  if(task.done){ showReward(planId); }
+}
+function delTask(planId, taskId){
+  const plan=state.plans.find(p=>p.id===planId); if(!plan) return;
+  plan.tasks=plan.tasks.filter(t=>t.id!==taskId);
+  if(!plan.tasks.length) state.plans=state.plans.filter(p=>p.id!==planId);
+  save(); renderActivePlans();
+}
+function showReward(planId){
+  const card=document.querySelector('.plan-card[data-plan-id="'+planId+'"]');
+  if(!card) return;
+  const old=card.querySelector('.reward-box'); if(old) old.remove();
+  const div=document.createElement('div');
+  div.className='reward-box';
+  div.textContent=pick(REWARDS);
+  card.appendChild(div);
+  setTimeout(()=>{ if(div.parentNode) div.style.opacity='0.6'; }, 4000);
+}
+function renderActivePlans(){
+  const box=$('activePlans'); if(!box) return;
+  const plans=state.plans.filter(p=>p.tasks.length);
+  if(!plans.length){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="sect-title">我的行動計畫</div>'+plans.map(p=>{
+    const done=p.tasks.filter(t=>t.done).length;
+    return '<div class="plan-card" data-plan-id="'+p.id+'">'+
+      '<div class="pc-head"><span class="pc-wish">願望：'+esc(p.wish)+'</span>'+
+      '<span class="wish-sub" style="margin:0">'+WISH_CAT_NAME[p.cat]+' · '+done+'/'+p.tasks.length+'</span></div>'+
+      p.tasks.map(t=>'<div class="plan-task '+(t.done?'done':'')+'" data-task="'+t.id+'">'+
+        '<span class="tick" data-act="toggle">'+(t.done?'✓':'')+'</span>'+
+        '<span class="tlabel" data-act="toggle">'+esc(t.text)+'</span>'+
+        '<button class="plan-del" data-act="del">×</button></div>').join('')+
+    '</div>';
+  }).join('');
+  box.querySelectorAll('.plan-card').forEach(card=>{
+    const pid=card.dataset.planId;
+    card.querySelectorAll('.plan-task').forEach(row=>{
+      const tid=row.dataset.task;
+      row.querySelectorAll('[data-act="toggle"]').forEach(el=> el.onclick=()=>toggleTask(pid,tid));
+      const del=row.querySelector('[data-act="del"]'); if(del) del.onclick=()=>delTask(pid,tid);
+    });
+  });
+}
+
 function currentSlot(){
   const h = new Date().getHours();
   if(h>=5 && h<11) return 'dawn';
