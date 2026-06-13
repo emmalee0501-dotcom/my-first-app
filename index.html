@@ -3,26 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.2.4</title>
+<title>生活軌跡 · v0.3.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
-    --bg: #f5f3ef;
-    --bg2: #e8e3db;
-    --card: #fdfcfa;
-    --ink: #3a3631;
-    --ink2: #6a655d;
-    --ink3: #b3ada3;
-    --line: #ece8e1;
-    --accent: #7d9b76;
-    --shadow: 0 4px 24px rgba(58,54,49,0.07);
-    --c-work: #8a93b5;
-    --c-study: #b5a07d;
-    --c-exercise: #c08a6f;
-    --c-chore: #9b9287;
-    --c-leisure: #7faaa0;
-    --c-social: #c0879b;
-    --c-sleep: #8a86a8;
+    --bg: #f3f0ea;
+    --bg2: #e6e1d8;
+    --card: #fbfaf6;
+    --ink: #4a453e;
+    --ink2: #756f66;
+    --ink3: #b0aaa0;
+    --line: #eae4dc;
+    --line2: #e2dcd2;
+    --accent: #8a9a78;
+    --accent2: #b89a8a;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --shadow: 0 2px 16px rgba(74,69,62,0.05);
+    --c-work: #9aa0b8;
+    --c-study: #c2af8a;
+    --c-exercise: #c49a82;
+    --c-chore: #a39c90;
+    --c-leisure: #8fb0a6;
+    --c-social: #c79aac;
+    --c-sleep: #9a96b5;
+    --c-spirit: #b596ab;
+    --c-travel: #a7b585;
     --c-other: #c3bdb3;
   }
   body {
@@ -123,6 +129,7 @@
   .day-head { font-size: 13px; color: var(--ink2); padding: 10px 4px 6px; font-weight: 600; }
   .entry {
     background: var(--card);
+    border: 0.5px solid var(--line2);
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 8px;
@@ -164,7 +171,7 @@
   .week-bar { flex: 1; height: 22px; border-radius: 6px; overflow: hidden; display: flex; background: var(--bg2); }
   .week-bar i { height: 100%; }
 
-  .card2 { background: var(--card); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .card2 { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
   .pie-wrap { display: flex; align-items: center; gap: 18px; }
   .legend { flex: 1; }
   .legend .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
@@ -178,7 +185,7 @@
   .range-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   .goal {
-    background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px;
+    background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px;
   }
   .goal .gtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .goal .gname { font-size: 15px; font-weight: 600; }
@@ -186,7 +193,7 @@
   .goal .gval { font-size: 13px; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .progress { height: 8px; background: var(--bg2); border-radius: 20px; margin-top: 10px; overflow: hidden; }
   .progress i { display: block; height: 100%; border-radius: 20px; background: var(--accent); transition: width 0.4s; }
-  .goal.done .progress i { background: #7d9b76; }
+  .goal.done .progress i { background: var(--accent); }
   .goal .gstreak { font-size: 11px; color: var(--accent); margin-top: 6px; }
   .goal .del { color: var(--ink3); font-size: 20px; cursor: pointer; background: none; border: none; line-height: 1; }
 
@@ -231,7 +238,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.2.4</div>
+    <div class="ver">my-first-app · v0.3.0</div>
   </header>
 
   <section class="view on" id="v-today">
@@ -369,15 +376,15 @@
 <script>
 const STORE_KEY = 'life_tracker_v1';
 const CATS = [
-  { id:'work',     name:'工作', hex:'#8a93b5' },
-  { id:'study',    name:'學習', hex:'#b5a07d' },
-  { id:'exercise', name:'運動', hex:'#c08a6f' },
-  { id:'chore',    name:'家務', hex:'#9b9287' },
-  { id:'leisure',  name:'休閒', hex:'#7faaa0' },
-  { id:'social',   name:'社交', hex:'#c0879b' },
-  { id:'sleep',    name:'睡眠', hex:'#8a86a8' },
-  { id:'spirit',   name:'心靈成長', hex:'#a8809b' },
-  { id:'travel',   name:'旅行·探索', hex:'#9caf6f' },
+  { id:'work',     name:'工作', hex:'#9aa0b8' },
+  { id:'study',    name:'學習', hex:'#c2af8a' },
+  { id:'exercise', name:'運動', hex:'#c49a82' },
+  { id:'chore',    name:'家務', hex:'#a39c90' },
+  { id:'leisure',  name:'休閒', hex:'#8fb0a6' },
+  { id:'social',   name:'社交', hex:'#c79aac' },
+  { id:'sleep',    name:'睡眠', hex:'#9a96b5' },
+  { id:'spirit',   name:'心靈成長', hex:'#b596ab' },
+  { id:'travel',   name:'旅行·探索', hex:'#a7b585' },
   { id:'other',    name:'其他', hex:'#c3bdb3' },
 ];
 const MOODS = ['😊','🙂','😐','😕','😫'];
