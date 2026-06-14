@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.3</title>
+<title>生活軌跡 · v0.9.4</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -262,6 +262,14 @@
   .review-hint:active { opacity: 0.8; }
   .rh-title { font-size: 14px; font-weight: 600; color: var(--ink); }
   .rh-sub { font-size: 12px; color: var(--ink2); margin-top: 3px; }
+  .estar { font-size: 17px; color: var(--ink3); cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+  .estar.on { color: var(--accent); }
+  .keep-grp { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
+  .keep-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+  .keep-star { color: var(--accent); font-size: 15px; }
+  .keep-check { color: var(--accent); font-size: 15px; }
+  .keep-t1 { font-size: 14px; color: var(--ink); line-height: 1.5; }
+  .keep-t2 { font-size: 11px; color: var(--ink3); margin-top: 2px; }
   #themeBtn {
     position: absolute; top: 20px; right: 16px;
     background: var(--card); border: 0.5px solid var(--line2); color: var(--ink2);
@@ -386,7 +394,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.3</div>
+    <div class="ver">my-first-app · v0.9.4</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -420,20 +428,15 @@
     <div id="calDayDetail"></div>
   </section>
 
-  <section class="view" id="v-week">
+  <section class="view" id="v-stats">
     <div class="cal-head">
       <button class="btn ghost sm" id="prevWk">‹</button>
       <div class="mo" id="weekLabel"></div>
       <button class="btn ghost sm" id="nextWk">›</button>
     </div>
     <div class="card2" id="weekTraj"></div>
-    <div class="sect-title">本週類別佔比</div>
-    <div class="card2" id="weekPie"></div>
-  </section>
-
-  <section class="view" id="v-stats">
-    <div class="sect-title">每週回顧</div>
-    <div id="weekReviewFull"></div>
+    <div class="sect-title">本週值得記住</div>
+    <div id="weekKeepsakes"></div>
     <div class="range-tabs" id="rangeTabs">
       <button data-r="week" class="on">本週</button>
       <button data-r="month">本月</button>
@@ -442,8 +445,6 @@
     <div class="card2" id="statPie"></div>
     <div class="sect-title">時間黑洞偵測</div>
     <div class="card2" id="blackhole"></div>
-    <div class="sect-title">週回顧</div>
-    <div class="card2"><div class="summary-box" id="weekSummary"></div></div>
   </section>
 
   <section class="view" id="v-goals">
@@ -478,7 +479,6 @@
 <nav class="tabbar">
   <button class="tab on" data-v="today"><span class="ic">📝</span>今日</button>
   <button class="tab" data-v="cal"><span class="ic">📅</span>日曆</button>
-  <button class="tab" data-v="week"><span class="ic">📊</span>週軌跡</button>
   <button class="tab" data-v="stats"><span class="ic">🍩</span>統計</button>
   <button class="tab" data-v="goals"><span class="ic">🎯</span>目標</button>
   <button class="tab" data-v="partner"><span class="ic">🤍</span>夥伴</button>
@@ -713,12 +713,22 @@ function entryRow(e){
       '<div class="t1">'+esc(e.text)+' '+(e.mood||'')+'</div>'+
       '<div class="t2">'+fmtTime(e.start)+'–'+(e.end?fmtTime(e.end):'…')+' · '+cat.name+(e.note?' · '+esc(e.note):'')+'</div>'+
     '</div>'+
+    '<span class="estar '+(e.star?'on':'')+'" data-star="'+e.id+'">'+(e.star?'★':'☆')+'</span>'+
     '<span class="dur">'+dur+'</span>'+
   '</div>';
 }
 function bindEntryRows(){
   document.querySelectorAll('.entry[data-id]').forEach(el=>{
-    el.onclick = ()=> openEntryModal(el.dataset.id);
+    el.onclick = (ev)=>{
+      if(ev.target.classList.contains('estar')){
+        ev.stopPropagation();
+        const id=ev.target.dataset.star;
+        const e=state.entries.find(x=>x.id===id);
+        if(e){ e.star=!e.star; save(); renderToday(); renderKeepsakes(); }
+        return;
+      }
+      openEntryModal(el.dataset.id);
+    };
   });
 }
 
@@ -779,8 +789,6 @@ function renderWeek(){
     html += '<div class="week-row"><span class="wlabel">'+wd[i]+' '+day.getDate()+'</span><div class="week-bar">'+bar+'</div></div>';
   }
   $('weekTraj').innerHTML = html;
-  const wsT=ws.getTime(), weT=ws.getTime()+7*864e5;
-  renderPieInto('weekPie', state.entries.filter(e=>e.end && e.start>=wsT && e.start<weT));
 }
 
 function aggregate(entries){
@@ -823,7 +831,7 @@ function renderStats(){
   const ents = rangeEntries(statRange);
   renderPieInto('statPie', ents);
   renderBlackhole(ents);
-  renderWeekSummary();
+  renderKeepsakes();
 }
 function renderBlackhole(ents){
   const agg = aggregate(ents);
@@ -838,19 +846,31 @@ function renderBlackhole(ents){
     return '<div class="summary-box" style="margin-bottom:8px"><b>'+c.name+'</b> 佔了 <b>'+pct+'%</b>，而且你還沒為它設目標。要不要關注一下？</div>';
   }).join('');
 }
-function renderWeekSummary(){
-  const s=startOfWeek(new Date()).getTime();
-  const ents = state.entries.filter(e=>e.end && e.start>=s);
-  const agg = aggregate(ents);
-  const sum=agg.sum, total=agg.total;
-  const el = $('weekSummary');
-  if(total<=0){ el.innerHTML = '本週還沒有記錄，開始記下第一筆吧。'; return; }
-  const top = CATS.filter(c=>sum[c.id]).sort((a,b)=>sum[b.id]-sum[a.id])[0];
-  const goalsDone = state.goals.filter(g=>goalProgress(g).done).length;
-  el.innerHTML = '本週共記錄 <b>'+ents.length+'</b> 筆、總計 <b>'+fmtDur(total)+'</b>。<br>'+
-    '花最多時間在 <b>'+top.name+'</b>（'+(sum[top.id]/total*100).toFixed(0)+'%）。<br>'+
-    '目標達成 <b>'+goalsDone+'/'+state.goals.length+'</b> 項。';
+function renderKeepsakes(){
+  const box = $('weekKeepsakes'); if(!box) return;
+  const s = startOfWeek(new Date()).getTime();
+  // 本週標星的片刻
+  const starred = state.entries.filter(e=>e.star && e.start>=s).sort((a,b)=>b.start-a.start);
+  // 本週完成的計畫步驟
+  const donePlans = [];
+  (state.plans||[]).forEach(p=>{ p.tasks.forEach(t=>{ if(t.done && (t.doneAt? t.doneAt>=s : true)) donePlans.push({wish:p.wish, task:t.text}); }); });
+  if(!starred.length && !donePlans.length){
+    box.innerHTML = '<div class="card2"><div class="summary-box">這週還沒有標記值得記住的片刻。<br>在「今日」記錄上點 ☆ 就能收藏，完成的目標也會出現在這裡。</div></div>';
+    return;
+  }
+  let html='<div class="card2">';
+  if(starred.length){
+    html += '<div class="keep-grp">難忘的片刻</div>';
+    html += starred.map(e=>'<div class="keep-item"><span class="keep-star">★</span><div class="keep-txt"><div class="keep-t1">'+esc(e.text)+' '+(e.mood||'')+'</div><div class="keep-t2">'+fmtDate(e.start)+' · '+catById(e.cat).name+'</div></div></div>').join('');
+  }
+  if(donePlans.length){
+    html += '<div class="keep-grp" style="margin-top:14px">完成的小步驟</div>';
+    html += donePlans.map(d=>'<div class="keep-item"><span class="keep-check">✓</span><div class="keep-txt"><div class="keep-t1">'+esc(d.task)+'</div><div class="keep-t2">來自願望：'+esc(d.wish)+'</div></div></div>').join('');
+  }
+  html += '</div>';
+  box.innerHTML = html;
 }
+function fmtDate(ts){ const d=new Date(ts); const wd=['日','一','二','三','四','五','六'][d.getDay()]; return (d.getMonth()+1)+'/'+d.getDate()+'（'+wd+'）'; }
 
 function goalProgress(g){
   const s=startOfWeek(new Date()).getTime();
@@ -1003,7 +1023,6 @@ function renderAll(){
   renderGoals();
   renderActivePlans();
   renderPartner();
-  renderWeekReviewFull();
   renderWeekReviewCard();
 }
 
@@ -1235,8 +1254,11 @@ function addPlanTask(wish, cat, mode, taskText){
 function toggleTask(planId, taskId){
   const plan=state.plans.find(p=>p.id===planId); if(!plan) return;
   const task=plan.tasks.find(t=>t.id===taskId); if(!task) return;
-  task.done=!task.done; save();
+  task.done=!task.done;
+  task.doneAt = task.done ? Date.now() : null;
+  save();
   renderActivePlans();
+  if(typeof renderKeepsakes==='function') renderKeepsakes();
   if(task.done){ showReward(planId); }
 }
 function delTask(planId, taskId){
@@ -1350,42 +1372,6 @@ function computeWeekReview(){
   (state.plans||[]).forEach(p=>{ p.tasks.forEach(t=>{ planTotal++; if(t.done) planDone++; }); });
   return { moments, topCat, topCatName: topCat?catById(topCat).name:null, topMood, planDone, planTotal };
 }
-function weekWarmSummary(r){
-  const p = currentPartner();
-  if(r.moments===0){
-    return '這週還沒有記錄，沒關係。新的一週，隨時可以開始。';
-  }
-  let lines=[];
-  lines.push('這週你記錄了 '+r.moments+' 個片刻');
-  if(r.topCatName) lines.push('最常出現的是「'+r.topCatName+'」');
-  if(r.planDone>0) lines.push('完成了 '+r.planDone+' 個小步驟');
-  let body = lines.join('，')+'。';
-  // 暖心結語（選了夥伴用夥伴口吻）
-  let warm;
-  if(r.planDone>0) warm='你不是沒有前進，只是用自己的節奏在走。下週也一起，好嗎？';
-  else if(r.moments>=5) warm='你願意這樣記錄自己，就是一種溫柔。下週繼續陪你。';
-  else warm='慢慢來也很好，記錄本身就有意義。下週我還在。';
-  if(p){
-    const tail = EMOJI_PARTNERS.includes(p.id) ? ' '+p.emoji : '';
-    warm = p.zh+'想對你說：'+warm+tail;
-  }
-  return body+'\n'+warm;
-}
-function renderWeekReviewFull(){
-  const box=$('weekReviewFull'); if(!box) return;
-  const r=computeWeekReview();
-  const summary=weekWarmSummary(r);
-  const parts=summary.split('\n');
-  box.innerHTML='<div class="review-card">'+
-    '<div class="review-row"><span class="review-num">'+r.moments+'</span><span class="review-lbl">本週片刻</span>'+
-      (r.topCatName?'<span class="review-num">'+esc(r.topCatName)+'</span><span class="review-lbl">最常出現</span>':'')+
-      (r.planTotal>0?'<span class="review-num">'+r.planDone+'/'+r.planTotal+'</span><span class="review-lbl">完成步驟</span>':'')+
-      (r.topMood?'<span class="review-num">'+r.topMood+'</span><span class="review-lbl">常見心情</span>':'')+
-    '</div>'+
-    '<div class="review-body">'+esc(parts[0])+'</div>'+
-    (parts[1]?'<div class="review-warm">'+esc(parts[1])+'</div>':'')+
-  '</div>';
-}
 function renderWeekReviewCard(){
   const box=$('weekReviewCard'); if(!box) return;
   const day=new Date().getDay(); // 0=日 6=六
@@ -1393,8 +1379,8 @@ function renderWeekReviewCard(){
   const r=computeWeekReview();
   if(!isWeekend || r.moments===0){ box.innerHTML=''; return; }
   box.innerHTML='<div class="review-hint" id="reviewHint">'+
-    '<div class="rh-text"><div class="rh-title">本週回顧好了</div>'+
-    '<div class="rh-sub">這週你記錄了 '+r.moments+' 個片刻，點來看看 →</div></div></div>';
+    '<div class="rh-text"><div class="rh-title">這週的回顧</div>'+
+    '<div class="rh-sub">看看本週值得記住的片刻 →</div></div></div>';
   $('reviewHint').onclick=()=>{ switchView('stats'); };
 }
 function getAmbientMode(){
