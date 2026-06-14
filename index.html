@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.4</title>
+<title>生活軌跡 · v0.9.5</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -394,7 +394,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.4</div>
+    <div class="ver">my-first-app · v0.9.5</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -429,12 +429,6 @@
   </section>
 
   <section class="view" id="v-stats">
-    <div class="cal-head">
-      <button class="btn ghost sm" id="prevWk">‹</button>
-      <div class="mo" id="weekLabel"></div>
-      <button class="btn ghost sm" id="nextWk">›</button>
-    </div>
-    <div class="card2" id="weekTraj"></div>
     <div class="sect-title">本週值得記住</div>
     <div id="weekKeepsakes"></div>
     <div class="range-tabs" id="rangeTabs">
@@ -768,28 +762,7 @@ function renderCalDetail(){
 }
 
 let weekRef = startOfWeek(new Date());
-function renderWeek(){
-  const ws = new Date(weekRef);
-  const we = new Date(ws); we.setDate(we.getDate()+6);
-  $('weekLabel').textContent = (ws.getMonth()+1)+'/'+ws.getDate()+' – '+(we.getMonth()+1)+'/'+we.getDate();
-  const wd = ['一','二','三','四','五','六','日'];
-  let html='';
-  for(let i=0;i<7;i++){
-    const day = new Date(ws); day.setDate(day.getDate()+i);
-    const k = dateKey(day.getTime());
-    const list = state.entries.filter(e=>e.end && dateKey(e.start)===k);
-    const total = list.reduce((s,e)=>s+(e.end-e.start),0);
-    let bar='';
-    if(total>0){
-      list.sort((a,b)=>a.start-b.start).forEach(e=>{
-        const w = ((e.end-e.start)/total*100).toFixed(2);
-        bar += '<i style="width:'+w+'%;background:'+catById(e.cat).hex+'" title="'+esc(e.text)+'"></i>';
-      });
-    }
-    html += '<div class="week-row"><span class="wlabel">'+wd[i]+' '+day.getDate()+'</span><div class="week-bar">'+bar+'</div></div>';
-  }
-  $('weekTraj').innerHTML = html;
-}
+function renderWeek(){ /* 七天長條圖已移除，保留空函式避免呼叫出錯 */ }
 
 function aggregate(entries){
   const sum = {}; let total=0;
@@ -1002,8 +975,6 @@ document.querySelectorAll('.tab').forEach(tab=>{
 });
 $('prevMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()-1); renderCal(); };
 $('nextMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()+1); renderCal(); };
-$('prevWk').onclick=()=>{ weekRef.setDate(weekRef.getDate()-7); renderWeek(); };
-$('nextWk').onclick=()=>{ weekRef.setDate(weekRef.getDate()+7); renderWeek(); };
 document.querySelectorAll('#rangeTabs button').forEach(b=>{
   b.onclick=()=>{ document.querySelectorAll('#rangeTabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); statRange=b.dataset.r; renderStats(); };
 });
@@ -1018,7 +989,6 @@ function renderAll(){
   renderRunning();
   renderToday();
   renderCal(); renderCalDetail();
-  renderWeek();
   renderStats();
   renderGoals();
   renderActivePlans();
