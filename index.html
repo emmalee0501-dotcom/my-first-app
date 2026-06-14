@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.5</title>
+<title>生活軌跡 · v0.9.6</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -394,7 +394,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.5</div>
+    <div class="ver">my-first-app · v0.9.6</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1352,6 +1352,13 @@ function renderWeekReviewCard(){
     '<div class="rh-text"><div class="rh-title">這週的回顧</div>'+
     '<div class="rh-sub">看看本週值得記住的片刻 →</div></div></div>';
   $('reviewHint').onclick=()=>{ switchView('stats'); };
+}
+function currentSlot(){
+  const h = new Date().getHours();
+  if(h>=5 && h<11) return 'dawn';
+  if(h>=11 && h<17) return 'day';
+  if(h>=17 && h<20) return 'dusk';
+  return 'night';
 }
 function getAmbientMode(){
   try{ return localStorage.getItem(AMBIENT_KEY) || 'auto'; }catch(e){ return 'auto'; }
