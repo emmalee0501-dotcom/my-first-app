@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.0</title>
+<title>生活軌跡 · v0.9.1</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -310,6 +310,7 @@
   .partner-current { margin-bottom: 18px; }
   .pc-cur { display: flex; align-items: center; gap: 14px; background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow); }
   .pc-emoji { font-size: 38px; line-height: 1; }
+  .pc-emoji-img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
   .pc-name { font-size: 17px; font-weight: 600; color: var(--ink); }
   .pc-en { font-size: 12px; color: var(--ink3); letter-spacing: 1px; }
   .pc-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; }
@@ -319,6 +320,7 @@
   .partner-card.on { border-color: var(--accent); }
   .partner-card:active { opacity: 0.8; }
   .pcard-emoji { font-size: 30px; line-height: 1; margin-bottom: 6px; }
+  .pcard-emoji-img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; margin: 0 auto 6px; display: block; }
   .pcard-name { font-size: 15px; font-weight: 600; color: var(--ink); }
   .pcard-en { font-size: 10px; color: var(--ink3); letter-spacing: 1px; }
   .pcard-sub { font-size: 11px; color: var(--ink2); margin-top: 4px; line-height: 1.4; }
@@ -369,7 +371,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.0</div>
+    <div class="ver">my-first-app · v0.9.1</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1062,28 +1064,42 @@ function companionReply(cat){ return pick(REPLIES[cat] || REPLIES.other); }
 // ===== 同行夥伴 =====
 const PARTNERS = [
   { id:'nolen', en:'NOLEN', zh:'諾倫', sub:'沉穩解惑 · 像一座方舟', quote:'別急，我們一件一件來。', emoji:'🌫️', group:'ECLIPSE',
-    voice:['別急，一件一件來就好','慢慢來，你不是一個人在扛','把腳步放穩，我在這裡','深呼吸，我們一步一步走'] },
+    voice:['別急，一件一件來就好','慢慢來，你不是一個人在扛','把腳步放穩，我在這裡','深呼吸，我們一步一步走'], photos:{dawn:null,day:null,night:null} },
   { id:'rayu', en:'RAYU', zh:'瑞悠', sub:'溫柔共情 · 安靜的太陽', quote:'你不孤單，我在。', emoji:'🌤️', group:'ECLIPSE',
-    voice:['你不孤單，我在這裡','辛苦了，我都看見了','你的感受都是真的，沒關係','想說什麼都可以，我聽著'] },
+    voice:['你不孤單，我在這裡','辛苦了，我都看見了','你的感受都是真的，沒關係','想說什麼都可以，我聽著'], photos:{dawn:null,day:null,night:null} },
   { id:'vann', en:'VANN', zh:'梵恩', sub:'陽光行動 · 一顆會走路的維他命', quote:'走啦，出門就對了！', emoji:'☀️', group:'ECLIPSE',
-    voice:['走啦，動起來就對了！','別想太多，先做就對了','今天也要元氣滿滿喔','站起來伸個懶腰，走！'] },
+    voice:['走啦，動起來就對了！','別想太多，先做就對了','今天也要元氣滿滿喔','站起來伸個懶腰，走！'], photos:{dawn:null,day:null,night:null} },
   { id:'orin', en:'ORIN', zh:'歐凜', sub:'反差守護 · 銳利又神秘', quote:'別怕，有我在。', emoji:'🌙', group:'ECLIPSE',
-    voice:['別怕，有我在','交給我，你只要照顧好自己','我會在這裡，放心','累了就靠著，沒關係'] },
+    voice:['別怕，有我在','交給我，你只要照顧好自己','我會在這裡，放心','累了就靠著，沒關係'], photos:{dawn:null,day:null,night:null} },
   { id:'nila', en:'NILA', zh:'妮菈', sub:'通透智者 · 清醒的溫柔', quote:'你已經做得很好了。', emoji:'🤍', group:'LUEUR',
-    voice:['你已經做得很好了','不用對自己那麼嚴格','你比你想的更有力量','看清楚了，就會輕一些'] },
+    voice:['你已經做得很好了','不用對自己那麼嚴格','你比你想的更有力量','看清楚了，就會輕一些'], photos:{dawn:null,day:null,night:null} },
   { id:'lune', en:'LUNÉ', zh:'露霓', sub:'清晨重啟 · 晨露玫瑰', quote:'想哭就哭，我陪著。', emoji:'🌹', group:'LUEUR',
-    voice:['想哭就哭，我陪著','每一天都可以重新開始','把昨天放下，今天是新的','溫柔一點，對自己'] },
+    voice:['想哭就哭，我陪著','每一天都可以重新開始','把昨天放下，今天是新的','溫柔一點，對自己'], photos:{dawn:null,day:null,night:null} },
   { id:'yuzz', en:'YUZZ', zh:'柚子', sub:'元氣解憂 · 氣泡感', quote:'煩惱？等等再煩，先玩。', emoji:'🫧', group:'LUEUR',
-    voice:['煩惱等等再煩，先開心','嘿，給你一點氣泡能量！','別繃太緊，笑一個','今天也要記得好玩喔'] },
+    voice:['煩惱等等再煩，先開心','嘿，給你一點氣泡能量！','別繃太緊，笑一個','今天也要記得好玩喔'], photos:{dawn:null,day:null,night:null} },
   { id:'vela', en:'VELA', zh:'薇菈', sub:'颯爽守護 · 帶刺的玫瑰', quote:'誰欺負你？報名字。', emoji:'🥀', group:'LUEUR',
-    voice:['誰讓你不開心？我幫你','你值得被好好對待','站直一點，你很棒','別委屈自己，聽到沒'] },
+    voice:['誰讓你不開心？我幫你','你值得被好好對待','站直一點，你很棒','別委屈自己，聽到沒'], photos:{dawn:null,day:null,night:null} },
   { id:'mofu', en:'MOFU', zh:'毛芙', sub:'無條件的快樂', quote:'你回來啦！我等你好久。', emoji:'🐾', group:'寵物',
-    voice:['你回來啦！我好開心','汪！今天也要抱抱','看到你就好開心～','陪著你，哪都不去'] },
+    voice:['你回來啦！我好開心','汪！今天也要抱抱','看到你就好開心～','陪著你，哪都不去'], photos:{dawn:null,day:null,night:null} },
   { id:'nixi', en:'NIXI', zh:'尼希', sub:'高冷反差', quote:'……喵。（其實我一直都在。）', emoji:'🐈‍⬛', group:'寵物',
-    voice:['……喵。（我一直都在）','哼，算你做得不錯','假裝沒看你，其實有在','過來，讓你摸一下'] },
+    voice:['……喵。（我一直都在）','哼，算你做得不錯','假裝沒看你，其實有在','過來，讓你摸一下'], photos:{dawn:null,day:null,night:null} },
 ];
 const partnerById = id => PARTNERS.find(p=>p.id===id);
 function currentPartner(){ return state.partner ? partnerById(state.partner) : null; }
+// 依目前日夜時段取角色照片縮圖：早(dawn)用 dawn、午後/黃昏用 day、夜晚用 night；之後填了照片才會有，現在都 null
+function partnerPhoto(p){
+  if(!p || !p.photos) return null;
+  const slot = currentSlot();
+  if(slot==='dawn') return p.photos.dawn || p.photos.day || null;
+  if(slot==='night') return p.photos.night || p.photos.day || null;
+  return p.photos.day || null; // 午後、黃昏用 day
+}
+// 顯示角色頭像：有照片用照片，否則用 emoji
+function partnerAvatar(p, cls){
+  const photo = partnerPhoto(p);
+  if(photo) return '<img class="'+cls+'-img" src="'+photo+'" alt="'+esc(p.zh)+'">';
+  return '<div class="'+cls+'">'+p.emoji+'</div>';
+}
 const EMOJI_PARTNERS = ['vann','yuzz','mofu','nixi']; // 只有這幾個活潑/賣萌的角色回應帶 emoji
 function buildReply(cat){
   const p = currentPartner();
@@ -1260,7 +1276,7 @@ function renderPartner(){
   if(top){
     if(cur){
       top.innerHTML='<div class="pc-cur">'+
-        '<div class="pc-emoji">'+cur.emoji+'</div>'+
+        partnerAvatar(cur,'pc-emoji')+
         '<div class="pc-info"><div class="pc-name">'+cur.zh+' <span class="pc-en">'+cur.en+'</span></div>'+
         '<div class="pc-sub">'+cur.sub+'</div>'+
         '<div class="pc-quote">「'+esc(cur.quote)+'」</div></div></div>'+
@@ -1274,7 +1290,7 @@ function renderPartner(){
     grid.innerHTML=PARTNERS.map(p=>{
       const on = state.partner===p.id;
       return '<div class="partner-card '+(on?'on':'')+'" data-pid="'+p.id+'">'+
-        '<div class="pcard-emoji">'+p.emoji+'</div>'+
+        partnerAvatar(p,'pcard-emoji')+
         '<div class="pcard-name">'+p.zh+'</div>'+
         '<div class="pcard-en">'+p.en+'</div>'+
         '<div class="pcard-sub">'+p.sub+'</div>'+
