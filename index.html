@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.2</title>
+<title>生活軌跡 · v0.9.3</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -294,6 +294,7 @@
   }
   @keyframes fadeInReply { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .ambient-time { font-size: 11px; letter-spacing: 1px; }
+  .ambient-date { font-size: 12px; opacity: 0.85; margin-top: 1px; }
   .ambient-greet { font-size: 15px; font-weight: 500; line-height: 1.5; }
   .wish-box { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
   .wish-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
@@ -344,6 +345,7 @@
       linear-gradient(155deg, #faecd6, #f0dcbc);
   }
   [data-time="dawn"] .ambient-time { color: #a9885c; }
+  [data-time="dawn"] .ambient-date { color: #a9885c; }
   [data-time="dawn"] .ambient-greet { color: #7c6038; }
   /* 午後 */
   [data-time="day"] .ambient-inner {
@@ -354,6 +356,7 @@
       linear-gradient(155deg, #eef0e4, #dde4d4);
   }
   [data-time="day"] .ambient-time { color: #7d9080; }
+  [data-time="day"] .ambient-date { color: #7d9080; }
   [data-time="day"] .ambient-greet { color: #4f6256; }
   /* 黃昏 */
   [data-time="dusk"] .ambient-inner {
@@ -364,6 +367,7 @@
       linear-gradient(155deg, #f7ddc6, #e8bfa8);
   }
   [data-time="dusk"] .ambient-time { color: #a06a52; }
+  [data-time="dusk"] .ambient-date { color: #a06a52; }
   [data-time="dusk"] .ambient-greet { color: #7d4632; }
   /* 夜晚 */
   [data-time="night"] .ambient-inner {
@@ -374,6 +378,7 @@
       linear-gradient(155deg, #3b3658, #2a2640);
   }
   [data-time="night"] .ambient-time { color: #c6b186; }
+  [data-time="night"] .ambient-date { color: #c6b186; }
   [data-time="night"] .ambient-greet { color: #e8dcc0; }
 </style>
 </head>
@@ -381,7 +386,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.2</div>
+    <div class="ver">my-first-app · v0.9.3</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -389,6 +394,7 @@
     <div class="ambient" id="ambient">
       <div class="ambient-inner">
         <span class="ambient-time" id="ambientTime"></span>
+        <span class="ambient-date" id="ambientDate"></span>
         <span class="ambient-greet" id="ambientGreet"></span>
       </div>
     </div>
@@ -1404,6 +1410,11 @@ function applyAmbient(){
   document.documentElement.setAttribute('data-time', slot);
   const g = GREETINGS[slot];
   if($('ambientTime')) $('ambientTime').textContent = g.time;
+  if($('ambientDate')){
+    const now=new Date();
+    const wd=['日','一','二','三','四','五','六'][now.getDay()];
+    $('ambientDate').textContent = (now.getMonth()+1)+'月'+now.getDate()+'日 · 星期'+wd;
+  }
   // 問候語只在時段改變時換一句，避免每分鐘跳動
   if(_ambientGreetCache.slot !== slot){
     _ambientGreetCache = { slot, text: pick(g.greets) };
