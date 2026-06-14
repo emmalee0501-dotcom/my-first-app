@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.8.1</title>
+<title>生活軌跡 · v0.9.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -307,6 +307,22 @@
   .plan-addstep { margin-top: 8px; }
   .plan-addstep .stepAdd { width: 100%; border: 1px dashed var(--line2); background: transparent; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: var(--ink); outline: none; }
   .plan-addstep .stepAdd:focus { border-color: var(--accent); border-style: solid; }
+  .partner-current { margin-bottom: 18px; }
+  .pc-cur { display: flex; align-items: center; gap: 14px; background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .pc-emoji { font-size: 38px; line-height: 1; }
+  .pc-name { font-size: 17px; font-weight: 600; color: var(--ink); }
+  .pc-en { font-size: 12px; color: var(--ink3); letter-spacing: 1px; }
+  .pc-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+  .pc-quote { font-size: 13px; color: var(--accent); margin-top: 6px; }
+  .partner-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .partner-card { background: var(--card); border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; position: relative; }
+  .partner-card.on { border-color: var(--accent); }
+  .partner-card:active { opacity: 0.8; }
+  .pcard-emoji { font-size: 30px; line-height: 1; margin-bottom: 6px; }
+  .pcard-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .pcard-en { font-size: 10px; color: var(--ink3); letter-spacing: 1px; }
+  .pcard-sub { font-size: 11px; color: var(--ink2); margin-top: 4px; line-height: 1.4; }
+  .pcard-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 20px; }
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
@@ -353,7 +369,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.8.1</div>
+    <div class="ver">my-first-app · v0.9.0</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -427,6 +443,13 @@
     <div id="goalList"></div>
     <button class="btn ghost" id="addGoalBtn" style="width:100%;margin-top:8px;">＋ 新增數據型目標</button>
   </section>
+
+  <section class="view" id="v-partner">
+    <div class="partner-current" id="partnerCurrent"></div>
+    <div class="sect-title">選擇同行夥伴</div>
+    <div class="wish-sub" style="margin:0 4px 12px;">挑一位適合現在步調的夥伴，他會用自己的方式陪你。隨時可以更換。</div>
+    <div class="partner-grid" id="partnerGrid"></div>
+  </section>
 </div>
 
 <button class="fab" id="fabAdd" title="補記行程">＋</button>
@@ -437,6 +460,7 @@
   <button class="tab" data-v="week"><span class="ic">📊</span>週軌跡</button>
   <button class="tab" data-v="stats"><span class="ic">🍩</span>統計</button>
   <button class="tab" data-v="goals"><span class="ic">🎯</span>目標</button>
+  <button class="tab" data-v="partner"><span class="ic">🤍</span>夥伴</button>
 </nav>
 
 <div class="modal-bg" id="entryModal">
@@ -580,9 +604,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [] };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -632,7 +656,7 @@ function startRunning(){
   const cat = autoClassify(text);
   state.running = { text, start: Date.now(), cat };
   input.value=''; save(); renderRunning();
-  showCompanionReply(companionReply(cat));
+  showCompanionReply(buildReply(cat));
 }
 function endRunning(){
   if(!state.running) return;
@@ -955,6 +979,7 @@ function renderAll(){
   renderStats();
   renderGoals();
   renderActivePlans();
+  renderPartner();
 }
 
 const THEMES = [
@@ -1034,6 +1059,40 @@ const REPLIES = {
   other:   ['好好記錄當下的自己','謝謝你願意停下來記錄','每個片刻都值得被看見','我在這裡，陪著你'],
 };
 function companionReply(cat){ return pick(REPLIES[cat] || REPLIES.other); }
+// ===== 同行夥伴 =====
+const PARTNERS = [
+  { id:'nolen', en:'NOLEN', zh:'諾倫', sub:'沉穩解惑 · 像一座方舟', quote:'別急，我們一件一件來。', emoji:'🌫️', group:'ECLIPSE',
+    voice:['別急，一件一件來就好','慢慢來，你不是一個人在扛','把腳步放穩，我在這裡','深呼吸，我們一步一步走'] },
+  { id:'rayu', en:'RAYU', zh:'瑞悠', sub:'溫柔共情 · 安靜的太陽', quote:'你不孤單，我在。', emoji:'🌤️', group:'ECLIPSE',
+    voice:['你不孤單，我在這裡','辛苦了，我都看見了','你的感受都是真的，沒關係','想說什麼都可以，我聽著'] },
+  { id:'vann', en:'VANN', zh:'梵恩', sub:'陽光行動 · 一顆會走路的維他命', quote:'走啦，出門就對了！', emoji:'☀️', group:'ECLIPSE',
+    voice:['走啦，動起來就對了！','別想太多，先做就對了','今天也要元氣滿滿喔','站起來伸個懶腰，走！'] },
+  { id:'orin', en:'ORIN', zh:'歐凜', sub:'反差守護 · 銳利又神秘', quote:'別怕，有我在。', emoji:'🌙', group:'ECLIPSE',
+    voice:['別怕，有我在','交給我，你只要照顧好自己','我會在這裡，放心','累了就靠著，沒關係'] },
+  { id:'nila', en:'NILA', zh:'妮菈', sub:'通透智者 · 清醒的溫柔', quote:'你已經做得很好了。', emoji:'🤍', group:'LUEUR',
+    voice:['你已經做得很好了','不用對自己那麼嚴格','你比你想的更有力量','看清楚了，就會輕一些'] },
+  { id:'lune', en:'LUNÉ', zh:'露霓', sub:'清晨重啟 · 晨露玫瑰', quote:'想哭就哭，我陪著。', emoji:'🌹', group:'LUEUR',
+    voice:['想哭就哭，我陪著','每一天都可以重新開始','把昨天放下，今天是新的','溫柔一點，對自己'] },
+  { id:'yuzz', en:'YUZZ', zh:'柚子', sub:'元氣解憂 · 氣泡感', quote:'煩惱？等等再煩，先玩。', emoji:'🫧', group:'LUEUR',
+    voice:['煩惱等等再煩，先開心','嘿，給你一點氣泡能量！','別繃太緊，笑一個','今天也要記得好玩喔'] },
+  { id:'vela', en:'VELA', zh:'薇菈', sub:'颯爽守護 · 帶刺的玫瑰', quote:'誰欺負你？報名字。', emoji:'🥀', group:'LUEUR',
+    voice:['誰讓你不開心？我幫你','你值得被好好對待','站直一點，你很棒','別委屈自己，聽到沒'] },
+  { id:'mofu', en:'MOFU', zh:'毛芙', sub:'無條件的快樂', quote:'你回來啦！我等你好久。', emoji:'🐾', group:'寵物',
+    voice:['你回來啦！我好開心','汪！今天也要抱抱','看到你就好開心～','陪著你，哪都不去'] },
+  { id:'nixi', en:'NIXI', zh:'尼希', sub:'高冷反差', quote:'……喵。（其實我一直都在。）', emoji:'🐈‍⬛', group:'寵物',
+    voice:['……喵。（我一直都在）','哼，算你做得不錯','假裝沒看你，其實有在','過來，讓你摸一下'] },
+];
+const partnerById = id => PARTNERS.find(p=>p.id===id);
+function currentPartner(){ return state.partner ? partnerById(state.partner) : null; }
+const EMOJI_PARTNERS = ['vann','yuzz','mofu','nixi']; // 只有這幾個活潑/賣萌的角色回應帶 emoji
+function buildReply(cat){
+  const p = currentPartner();
+  if(p){
+    const line = pick(p.voice);
+    return EMOJI_PARTNERS.includes(p.id) ? line + ' ' + p.emoji : line;
+  }
+  return pick(REPLIES[cat] || REPLIES.other);
+}
 function showCompanionReply(text){
   const slot = $('replySlot');
   if(!slot) return;
@@ -1193,6 +1252,43 @@ function renderActivePlans(){
       const del=row.querySelector('[data-act="del"]'); if(del) del.onclick=()=>delTask(pid,tid);
     });
   });
+}
+
+function renderPartner(){
+  const cur=currentPartner();
+  const top=$('partnerCurrent');
+  if(top){
+    if(cur){
+      top.innerHTML='<div class="pc-cur">'+
+        '<div class="pc-emoji">'+cur.emoji+'</div>'+
+        '<div class="pc-info"><div class="pc-name">'+cur.zh+' <span class="pc-en">'+cur.en+'</span></div>'+
+        '<div class="pc-sub">'+cur.sub+'</div>'+
+        '<div class="pc-quote">「'+esc(cur.quote)+'」</div></div></div>'+
+        '<div class="wish-sub" style="margin:10px 4px 0;text-align:center">'+cur.zh+'正在陪著你</div>';
+    } else {
+      top.innerHTML='<div class="wish-box" style="text-align:center"><div class="wish-sub" style="margin:0">還沒有選擇夥伴。<br>挑一位，他會用自己的方式陪你記錄、給你回應。</div></div>';
+    }
+  }
+  const grid=$('partnerGrid');
+  if(grid){
+    grid.innerHTML=PARTNERS.map(p=>{
+      const on = state.partner===p.id;
+      return '<div class="partner-card '+(on?'on':'')+'" data-pid="'+p.id+'">'+
+        '<div class="pcard-emoji">'+p.emoji+'</div>'+
+        '<div class="pcard-name">'+p.zh+'</div>'+
+        '<div class="pcard-en">'+p.en+'</div>'+
+        '<div class="pcard-sub">'+p.sub+'</div>'+
+        (on?'<div class="pcard-badge">陪伴中</div>':'')+
+      '</div>';
+    }).join('');
+    grid.querySelectorAll('.partner-card').forEach(card=>{
+      card.onclick=()=>{
+        const pid=card.dataset.pid;
+        state.partner = (state.partner===pid)? null : pid; // 再點一次可取消
+        save(); renderPartner();
+      };
+    });
+  }
 }
 
 function currentSlot(){
