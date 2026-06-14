@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.1</title>
+<title>生活軌跡 · v0.9.2</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -252,6 +252,16 @@
   }
   .summary-box { background: var(--bg); border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.9; color: var(--ink2); }
   .summary-box b { color: var(--ink); }
+  .review-card { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .review-row { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-bottom: 12px; }
+  .review-num { font-size: 20px; font-weight: 600; color: var(--accent); }
+  .review-lbl { font-size: 11px; color: var(--ink3); margin-right: 4px; }
+  .review-body { font-size: 14px; color: var(--ink); line-height: 1.7; }
+  .review-warm { font-size: 13px; color: var(--ink2); line-height: 1.8; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--line); }
+  .review-hint { background: var(--card); border: 0.5px solid var(--accent); border-radius: 14px; padding: 13px 16px; margin-bottom: 14px; cursor: pointer; box-shadow: var(--shadow); }
+  .review-hint:active { opacity: 0.8; }
+  .rh-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .rh-sub { font-size: 12px; color: var(--ink2); margin-top: 3px; }
   #themeBtn {
     position: absolute; top: 20px; right: 16px;
     background: var(--card); border: 0.5px solid var(--line2); color: var(--ink2);
@@ -371,7 +381,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.1</div>
+    <div class="ver">my-first-app · v0.9.2</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -382,6 +392,7 @@
         <span class="ambient-greet" id="ambientGreet"></span>
       </div>
     </div>
+    <div id="weekReviewCard"></div>
     <div class="live" id="liveBox">
       <div class="input-row">
         <input id="entryInput" placeholder="現在要做什麼？例如「寫企劃」" autocomplete="off">
@@ -415,6 +426,8 @@
   </section>
 
   <section class="view" id="v-stats">
+    <div class="sect-title">每週回顧</div>
+    <div id="weekReviewFull"></div>
     <div class="range-tabs" id="rangeTabs">
       <button data-r="week" class="on">本週</button>
       <button data-r="month">本月</button>
@@ -950,14 +963,16 @@ $('addGoalBtn').onclick = openGoalModal;
 $('wishBtn').onclick = suggestPlans;
 $('wishInput').addEventListener('keydown', e=>{ if(e.key==='Enter') suggestPlans(); });
 
+function switchView(v){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  const tab=document.querySelector('.tab[data-v="'+v+'"]');
+  if(tab) tab.classList.add('on');
+  $('v-'+v).classList.add('on');
+  renderAll();
+}
 document.querySelectorAll('.tab').forEach(tab=>{
-  tab.onclick = ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-    tab.classList.add('on');
-    $('v-'+tab.dataset.v).classList.add('on');
-    renderAll();
-  };
+  tab.onclick = ()=> switchView(tab.dataset.v);
 });
 $('prevMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()-1); renderCal(); };
 $('nextMo').onclick=()=>{ calRef.setMonth(calRef.getMonth()+1); renderCal(); };
@@ -982,6 +997,8 @@ function renderAll(){
   renderGoals();
   renderActivePlans();
   renderPartner();
+  renderWeekReviewFull();
+  renderWeekReviewCard();
 }
 
 const THEMES = [
@@ -1307,12 +1324,72 @@ function renderPartner(){
   }
 }
 
-function currentSlot(){
-  const h = new Date().getHours();
-  if(h>=5 && h<11) return 'dawn';
-  if(h>=11 && h<17) return 'day';
-  if(h>=17 && h<20) return 'dusk';
-  return 'night';
+/* ============ 每週回顧 ============ */
+function computeWeekReview(){
+  const s = startOfWeek(new Date()).getTime();
+  const ents = state.entries.filter(e=>e.start>=s);
+  const moments = ents.length;
+  // 最常做的分類
+  const catCount = {};
+  ents.forEach(e=>{ catCount[e.cat]=(catCount[e.cat]||0)+1; });
+  let topCat=null, topN=0;
+  for(const c in catCount){ if(catCount[c]>topN){ topN=catCount[c]; topCat=c; } }
+  // 心情傾向（mood 是 emoji，取最常出現）
+  const moodCount = {};
+  ents.forEach(e=>{ if(e.mood){ moodCount[e.mood]=(moodCount[e.mood]||0)+1; } });
+  let topMood=null, topMoodN=0;
+  for(const m in moodCount){ if(moodCount[m]>topMoodN){ topMoodN=moodCount[m]; topMood=m; } }
+  // 本週完成的計畫步驟
+  let planDone=0, planTotal=0;
+  (state.plans||[]).forEach(p=>{ p.tasks.forEach(t=>{ planTotal++; if(t.done) planDone++; }); });
+  return { moments, topCat, topCatName: topCat?catById(topCat).name:null, topMood, planDone, planTotal };
+}
+function weekWarmSummary(r){
+  const p = currentPartner();
+  if(r.moments===0){
+    return '這週還沒有記錄，沒關係。新的一週，隨時可以開始。';
+  }
+  let lines=[];
+  lines.push('這週你記錄了 '+r.moments+' 個片刻');
+  if(r.topCatName) lines.push('最常出現的是「'+r.topCatName+'」');
+  if(r.planDone>0) lines.push('完成了 '+r.planDone+' 個小步驟');
+  let body = lines.join('，')+'。';
+  // 暖心結語（選了夥伴用夥伴口吻）
+  let warm;
+  if(r.planDone>0) warm='你不是沒有前進，只是用自己的節奏在走。下週也一起，好嗎？';
+  else if(r.moments>=5) warm='你願意這樣記錄自己，就是一種溫柔。下週繼續陪你。';
+  else warm='慢慢來也很好，記錄本身就有意義。下週我還在。';
+  if(p){
+    const tail = EMOJI_PARTNERS.includes(p.id) ? ' '+p.emoji : '';
+    warm = p.zh+'想對你說：'+warm+tail;
+  }
+  return body+'\n'+warm;
+}
+function renderWeekReviewFull(){
+  const box=$('weekReviewFull'); if(!box) return;
+  const r=computeWeekReview();
+  const summary=weekWarmSummary(r);
+  const parts=summary.split('\n');
+  box.innerHTML='<div class="review-card">'+
+    '<div class="review-row"><span class="review-num">'+r.moments+'</span><span class="review-lbl">本週片刻</span>'+
+      (r.topCatName?'<span class="review-num">'+esc(r.topCatName)+'</span><span class="review-lbl">最常出現</span>':'')+
+      (r.planTotal>0?'<span class="review-num">'+r.planDone+'/'+r.planTotal+'</span><span class="review-lbl">完成步驟</span>':'')+
+      (r.topMood?'<span class="review-num">'+r.topMood+'</span><span class="review-lbl">常見心情</span>':'')+
+    '</div>'+
+    '<div class="review-body">'+esc(parts[0])+'</div>'+
+    (parts[1]?'<div class="review-warm">'+esc(parts[1])+'</div>':'')+
+  '</div>';
+}
+function renderWeekReviewCard(){
+  const box=$('weekReviewCard'); if(!box) return;
+  const day=new Date().getDay(); // 0=日 6=六
+  const isWeekend = (day===6 || day===0);
+  const r=computeWeekReview();
+  if(!isWeekend || r.moments===0){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="review-hint" id="reviewHint">'+
+    '<div class="rh-text"><div class="rh-title">本週回顧好了</div>'+
+    '<div class="rh-sub">這週你記錄了 '+r.moments+' 個片刻，點來看看 →</div></div></div>';
+  $('reviewHint').onclick=()=>{ switchView('stats'); };
 }
 function getAmbientMode(){
   try{ return localStorage.getItem(AMBIENT_KEY) || 'auto'; }catch(e){ return 'auto'; }
