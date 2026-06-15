@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.16</title>
+<title>生活軌跡 · v0.9.17</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -200,6 +200,11 @@
   .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
   .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .stat-fold { margin-top: 8px; }
+  .stat-fold summary { font-size: 13px; color: var(--ink2); cursor: pointer; padding: 10px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
+  .stat-fold summary::-webkit-details-marker { display: none; }
+  .stat-fold summary::before { content: '▸'; color: var(--ink3); transition: transform 0.2s; }
+  .stat-fold[open] summary::before { transform: rotate(90deg); }
   /* 本週心情與時間 */
   .mw-chart { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; height: 150px; padding: 6px 2px; }
   .mw-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; cursor: pointer; }
@@ -520,7 +525,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.16</div>
+    <div class="ver">my-first-app · v0.9.17</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -546,6 +551,8 @@
   </section>
 
   <section class="view" id="v-track">
+    <div class="sect-title">本週提醒</div>
+    <div class="card2" id="weekInsight"></div>
     <div class="sect-title">月曆</div>
     <div class="cal-head">
       <button class="btn ghost sm" id="prevMo">‹</button>
@@ -556,21 +563,19 @@
     <div id="calDayDetail"></div>
     <div class="sect-title">本週心情與時間</div>
     <div class="card2" id="moodWeek"></div>
-    <div class="sect-title">活躍時段</div>
-    <div class="card2" id="activeSlots"></div>
-    <div class="sect-title">本週值得記住</div>
-    <div id="weekKeepsakes"></div>
-    <div class="sect-title">本週提醒</div>
-    <div class="card2" id="weekInsight"></div>
-    <div class="sect-title">時間分布</div>
-    <div class="range-tabs" id="rangeTabs">
-      <button data-r="week" class="on">本週</button>
-      <button data-r="month">本月</button>
-      <button data-r="all">全部</button>
-    </div>
-    <div class="card2" id="statPie"></div>
     <div class="sect-title">時間黑洞偵測</div>
     <div class="card2" id="blackhole"></div>
+    <div class="sect-title">本週值得記住</div>
+    <div id="weekKeepsakes"></div>
+    <details class="stat-fold">
+      <summary>詳細統計</summary>
+      <div class="range-tabs" id="rangeTabs">
+        <button data-r="week" class="on">本週</button>
+        <button data-r="month">本月</button>
+        <button data-r="all">全部</button>
+      </div>
+      <div class="card2" id="statPie"></div>
+    </details>
   </section>
 
   <section class="view" id="v-goals">
@@ -1035,7 +1040,6 @@ function renderStats(){
   renderBlackhole(ents);
   renderKeepsakes();
   renderMoodWeek();
-  renderActiveSlots();
   renderWeekInsight();
 }
 
