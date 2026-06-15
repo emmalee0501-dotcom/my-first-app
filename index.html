@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.19</title>
+<title>生活軌跡 · v0.9.20</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -200,6 +200,15 @@
   .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
   .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .set-sub { font-size: 14px; margin-bottom: 4px; }
+  .set-partner { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .set-pcard { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 10px 12px; font-family: inherit; cursor: pointer; position: relative; }
+  .set-pcard.on { border-color: var(--accent); background: var(--bg); }
+  .set-pemoji { font-size: 18px; }
+  .set-pname { font-size: 14px; color: var(--ink); }
+  .set-pbadge { position: absolute; top: -7px; right: 6px; font-size: 9px; background: var(--accent); color: #fff; padding: 1px 6px; border-radius: 20px; }
+  .set-data { display: flex; gap: 8px; }
+  .partner-change-hint { font-size: 13px; color: var(--ink3); text-align: center; margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 12px; }
   .stat-fold { margin-top: 8px; }
   .stat-fold summary { font-size: 13px; color: var(--ink2); cursor: pointer; padding: 10px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
   .stat-fold summary::-webkit-details-marker { display: none; }
@@ -527,8 +536,8 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.19</div>
-    <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
+    <div class="ver">my-first-app · v0.9.20</div>
+    <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
   <section class="view on" id="v-today">
@@ -614,9 +623,12 @@
 
   <section class="view" id="v-partner">
     <div class="partner-current" id="partnerCurrent"></div>
-    <div class="sect-title">選擇同行夥伴</div>
-    <div class="wish-sub" style="margin:0 4px 12px;">挑一位適合現在步調的夥伴，他會用自己的方式陪你。隨時可以更換。</div>
-    <div class="partner-grid" id="partnerGrid"></div>
+    <div id="partnerPicker">
+      <div class="sect-title">選擇同行夥伴</div>
+      <div class="wish-sub" style="margin:0 4px 12px;">挑一位適合現在步調的夥伴，他會用自己的方式陪你。</div>
+      <div class="partner-grid" id="partnerGrid"></div>
+    </div>
+    <div class="partner-change-hint" id="partnerChangeHint">想換一位夥伴？到右上角「設定」就能更換。</div>
   </section>
 </div>
 
@@ -703,16 +715,25 @@
 
 <div class="modal-bg" id="themeModal">
   <div class="modal">
-    <h3>選擇主題</h3>
+    <h3>設定</h3>
+    <h3 class="set-sub">同行夥伴</h3>
+    <div class="hint" style="margin-bottom:10px;">更換陪你記錄、給你回應的夥伴</div>
+    <div class="set-partner" id="setPartner"></div>
+    <h3 class="set-sub" style="margin-top:20px;">主題色</h3>
     <div class="theme-grid" id="themeGrid"></div>
-    <h3 style="margin-top:20px;">日夜氛圍</h3>
+    <h3 class="set-sub" style="margin-top:20px;">日夜氛圍</h3>
     <div class="hint" style="margin-bottom:10px;">頂部橫幅會隨一天時段流動換色</div>
     <div class="range-tabs" id="ambientTabs">
       <button data-amb="auto" class="on">自動</button>
       <button data-amb="day">固定白天</button>
       <button data-amb="night">固定夜晚</button>
     </div>
-    <div class="modal-btns" style="margin-top:16px;">
+    <h3 class="set-sub" style="margin-top:20px;">資料管理</h3>
+    <div class="hint" style="margin-bottom:10px;">你的記錄都存在這台裝置上</div>
+    <div class="set-data">
+      <button class="btn ghost sm" id="exportData">匯出備份</button>
+    </div>
+    <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
   </div>
@@ -1668,26 +1689,36 @@ function renderPartner(){
       top.innerHTML='<div class="wish-box" style="text-align:center"><div class="wish-sub" style="margin:0">還沒有選擇夥伴。<br>挑一位，他會用自己的方式陪你記錄、給你回應。</div></div>';
     }
   }
+  // 有夥伴：收起選單，顯示「到設定更換」；無夥伴：顯示選單讓他先選
+  const picker=$('partnerPicker'); const changeHint=$('partnerChangeHint');
+  if(picker) picker.style.display = cur ? 'none' : '';
+  if(changeHint) changeHint.style.display = cur ? '' : 'none';
   const grid=$('partnerGrid');
-  if(grid){
-    grid.innerHTML=PARTNERS.map(p=>{
-      const on = state.partner===p.id;
-      return '<div class="partner-card '+(on?'on':'')+'" data-pid="'+p.id+'">'+
+  if(grid && !cur){
+    grid.innerHTML=PARTNERS.map(p=>
+      '<div class="partner-card" data-pid="'+p.id+'">'+
         partnerAvatar(p,'pcard-emoji')+
         '<div class="pcard-name">'+p.zh+'</div>'+
         '<div class="pcard-en">'+p.en+'</div>'+
         '<div class="pcard-sub">'+p.sub+'</div>'+
-        (on?'<div class="pcard-badge">陪伴中</div>':'')+
-      '</div>';
-    }).join('');
+      '</div>').join('');
     grid.querySelectorAll('.partner-card').forEach(card=>{
-      card.onclick=()=>{
-        const pid=card.dataset.pid;
-        state.partner = (state.partner===pid)? null : pid; // 再點一次可取消
-        save(); renderPartner();
-      };
+      card.onclick=()=>{ state.partner=card.dataset.pid; save(); renderPartner(); };
     });
   }
+}
+// 設定面板裡的換夥伴
+function renderSetPartner(){
+  const box=$('setPartner'); if(!box) return;
+  box.innerHTML=PARTNERS.map(p=>{
+    const on=state.partner===p.id;
+    return '<button class="set-pcard '+(on?'on':'')+'" data-pid="'+p.id+'">'+
+      '<span class="set-pemoji">'+p.emoji+'</span><span class="set-pname">'+p.zh+'</span>'+
+      (on?'<span class="set-pbadge">陪伴中</span>':'')+'</button>';
+  }).join('');
+  box.querySelectorAll('.set-pcard').forEach(b=>{
+    b.onclick=()=>{ state.partner=b.dataset.pid; save(); renderSetPartner(); renderPartner(); };
+  });
 }
 
 /* ============ 靈感 ============ */
@@ -1917,7 +1948,15 @@ document.querySelectorAll('#ambientTabs button').forEach(b=>{
   b.onclick = ()=> setAmbientMode(b.dataset.amb);
 });
 
-$('themeBtn').onclick = ()=>{ renderThemeGrid(); applyAmbient(); $('themeModal').classList.add('on'); };
+$('themeBtn').onclick = ()=>{ renderThemeGrid(); renderSetPartner(); applyAmbient(); $('themeModal').classList.add('on'); };
+$('exportData').onclick = ()=>{
+  try{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download='心靈軌跡備份_'+dateKey(Date.now())+'.json'; a.click();
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('匯出失敗，請稍後再試'); }
+};
 $('themeClose').onclick = ()=> $('themeModal').classList.remove('on');
 $('themeModal').onclick = e=>{ if(e.target.id==='themeModal') $('themeModal').classList.remove('on'); };
 
