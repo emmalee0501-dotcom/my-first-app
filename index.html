@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.13</title>
+<title>生活軌跡 · v0.9.14</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -198,6 +198,34 @@
   .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
   .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  /* 本週心情總覽 */
+  .mw-chart { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; height: 150px; padding: 6px 2px; }
+  .mw-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; cursor: pointer; }
+  .mw-face { font-size: 16px; margin-bottom: 4px; }
+  .mw-col.empty .mw-face { color: var(--ink3); }
+  .mw-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .mw-bar { width: 60%; max-width: 22px; background: var(--accent); border-radius: 8px 8px 4px 4px; opacity: 0.75; transition: height 0.4s ease; }
+  .mw-col.today .mw-bar { opacity: 1; }
+  .mw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); margin-bottom: 4px; }
+  .mw-day { font-size: 11px; color: var(--ink3); margin-top: 6px; }
+  .mw-col.today .mw-day { color: var(--accent); font-weight: 600; }
+  /* 活躍時段 */
+  .as-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .as-name { font-size: 12px; color: var(--ink2); width: 36px; }
+  .as-track { flex: 1; height: 10px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+  .as-fill { height: 100%; background: var(--line2); border-radius: 6px; transition: width 0.4s ease; }
+  .as-fill.top { background: var(--accent); }
+  .as-n { font-size: 11px; color: var(--ink3); width: 18px; text-align: right; }
+  .as-hint { font-size: 12px; color: var(--ink2); line-height: 1.7; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--line); }
+  /* 本週月相 */
+  .moon-row { display: flex; justify-content: space-between; gap: 4px; }
+  .moon-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; border-radius: 10px; }
+  .moon-col.today { background: var(--bg); }
+  .moon-g { font-size: 22px; }
+  .moon-d { font-size: 11px; color: var(--ink3); }
+  .moon-col.today .moon-d { color: var(--accent); font-weight: 600; }
+  /* 本週提醒 */
+  .insight { font-size: 14px; color: var(--ink2); line-height: 1.9; }
   .range-tabs button {
     flex: 1; padding: 8px; border-radius: 10px; border: 1px solid var(--line);
     background: var(--card); font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer;
@@ -489,7 +517,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.13</div>
+    <div class="ver">my-first-app · v0.9.14</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -514,7 +542,18 @@
     <div id="todayList"></div>
   </section>
 
-  <section class="view" id="v-cal">
+  <section class="view" id="v-track">
+    <div class="sect-title">本週心情總覽</div>
+    <div class="card2" id="moodWeek"></div>
+    <div class="sect-title">活躍時段</div>
+    <div class="card2" id="activeSlots"></div>
+    <div class="sect-title">本週月相</div>
+    <div class="card2" id="moonWeek"></div>
+    <div class="sect-title">本週值得記住</div>
+    <div id="weekKeepsakes"></div>
+    <div class="sect-title">本週提醒</div>
+    <div class="card2" id="weekInsight"></div>
+    <div class="sect-title">月曆</div>
     <div class="cal-head">
       <button class="btn ghost sm" id="prevMo">‹</button>
       <div class="mo" id="calMonth"></div>
@@ -522,11 +561,7 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div id="calDayDetail"></div>
-  </section>
-
-  <section class="view" id="v-stats">
-    <div class="sect-title">本週值得記住</div>
-    <div id="weekKeepsakes"></div>
+    <div class="sect-title">時間分布</div>
     <div class="range-tabs" id="rangeTabs">
       <button data-r="week" class="on">本週</button>
       <button data-r="month">本月</button>
@@ -583,8 +618,7 @@
 
 <nav class="tabbar">
   <button class="tab on" data-v="today"><span class="ic">📝</span>今日</button>
-  <button class="tab" data-v="cal"><span class="ic">📅</span>日曆</button>
-  <button class="tab" data-v="stats"><span class="ic">🍩</span>統計</button>
+  <button class="tab" data-v="track"><span class="ic">📈</span>軌跡</button>
   <button class="tab" data-v="goals"><span class="ic">🎯</span>目標</button>
   <button class="tab" data-v="muse"><span class="ic">✨</span>靈感</button>
   <button class="tab" data-v="partner"><span class="ic">🤍</span>夥伴</button>
@@ -998,7 +1032,125 @@ function renderStats(){
   renderPieInto('statPie', ents);
   renderBlackhole(ents);
   renderKeepsakes();
+  renderMoodWeek();
+  renderActiveSlots();
+  renderMoonWeek();
+  renderWeekInsight();
 }
+
+/* ===== 本週心情總覽 ===== */
+// 心情 emoji → 高度分數（😊=5 開心 ... 😫=1 低落）
+const MOOD_SCORE = { '😊':5, '🙂':4, '😐':3, '😕':2, '😫':1 };
+function renderMoodWeek(){
+  const box=$('moodWeek'); if(!box) return;
+  const ws=startOfWeek(new Date());
+  const wd=['一','二','三','四','五','六','日'];
+  const todayKey=dateKey(Date.now());
+  let bars='';
+  for(let i=0;i<7;i++){
+    const day=new Date(ws); day.setDate(day.getDate()+i);
+    const k=dateKey(day.getTime());
+    const moods=state.entries.filter(e=>dateKey(e.start)===k && e.mood && MOOD_SCORE[e.mood])
+      .map(e=>MOOD_SCORE[e.mood]);
+    const isToday=(k===todayKey);
+    if(moods.length){
+      const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
+      const h=20+(avg-1)/4*80; // 20%~100%
+      // 取最接近平均的 emoji
+      const face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p);
+      bars+='<div class="mw-col'+(isToday?' today':'')+'" data-k="'+k+'"><span class="mw-face">'+face+'</span>'+
+        '<div class="mw-bar-wrap"><div class="mw-bar" style="height:'+h+'%"></div></div>'+
+        '<span class="mw-day">'+wd[i]+'</span></div>';
+    } else {
+      bars+='<div class="mw-col empty'+(isToday?' today':'')+'" data-k="'+k+'"><span class="mw-face">·</span>'+
+        '<div class="mw-bar-wrap"><div class="mw-dot"></div></div>'+
+        '<span class="mw-day">'+wd[i]+'</span></div>';
+    }
+  }
+  box.innerHTML='<div class="mw-chart">'+bars+'</div>';
+  box.querySelectorAll('.mw-col').forEach(c=>{
+    c.onclick=()=>{ calSel=c.dataset.k; const cd=new Date(c.dataset.k); calRef=new Date(cd.getFullYear(),cd.getMonth(),1); renderCal(); renderCalDetail(); $('calDayDetail').scrollIntoView({behavior:'smooth',block:'center'}); };
+  });
+}
+
+/* ===== 活躍時段（從記錄時間反推，不猜能量高低） ===== */
+function renderActiveSlots(){
+  const box=$('activeSlots'); if(!box) return;
+  const ws=startOfWeek(new Date()).getTime();
+  const ents=state.entries.filter(e=>e.start>=ws);
+  if(!ents.length){ box.innerHTML='<div class="empty" style="padding:14px">這週還沒有記錄，記下幾筆就能看出你的活躍時段。</div>'; return; }
+  const slots={dawn:0,day:0,dusk:0,night:0};
+  const names={dawn:'清晨',day:'午後',dusk:'黃昏',night:'夜晚'};
+  ents.forEach(e=>{ const h=new Date(e.start).getHours();
+    if(h>=5&&h<11)slots.dawn++; else if(h>=11&&h<17)slots.day++; else if(h>=17&&h<20)slots.dusk++; else slots.night++;
+  });
+  const max=Math.max(...Object.values(slots));
+  const top=Object.keys(slots).reduce((a,b)=>slots[a]>=slots[b]?a:b);
+  let bars=Object.keys(slots).map(s=>{
+    const w=max>0?(slots[s]/max*100):0;
+    return '<div class="as-row"><span class="as-name">'+names[s]+'</span><div class="as-track"><div class="as-fill'+(s===top?' top':'')+'" style="width:'+w+'%"></div></div><span class="as-n">'+slots[s]+'</span></div>';
+  }).join('');
+  box.innerHTML=bars+'<div class="as-hint">你這週在「'+names[top]+'」最常記錄，那大概是你最有狀態的時段。</div>';
+}
+
+/* ===== 本週月相（真實天文計算） ===== */
+function moonPhase(date){
+  // 以已知新月(2000-01-06 18:14 UTC)為基準，朔望月 29.53059 天
+  const synodic=29.530588853;
+  const ref=Date.UTC(2000,0,6,18,14,0)/86400000;
+  const now=date.getTime()/86400000;
+  let age=((now-ref)%synodic); if(age<0)age+=synodic;
+  return age/synodic; // 0=新月 0.5=滿月
+}
+function moonGlyph(p){
+  // 回傳一個概略月相符號
+  if(p<0.0625||p>=0.9375)return '🌑';
+  if(p<0.1875)return '🌒'; if(p<0.3125)return '🌓'; if(p<0.4375)return '🌔';
+  if(p<0.5625)return '🌕'; if(p<0.6875)return '🌖'; if(p<0.8125)return '🌗'; return '🌘';
+}
+function renderMoonWeek(){
+  const box=$('moonWeek'); if(!box) return;
+  const ws=startOfWeek(new Date());
+  const wd=['一','二','三','四','五','六','日'];
+  const todayKey=dateKey(Date.now());
+  let cells='';
+  for(let i=0;i<7;i++){
+    const day=new Date(ws); day.setDate(day.getDate()+i);
+    const isToday=dateKey(day.getTime())===todayKey;
+    const g=moonGlyph(moonPhase(day));
+    cells+='<div class="moon-col'+(isToday?' today':'')+'"><span class="moon-g">'+g+'</span><span class="moon-d">'+wd[i]+'</span></div>';
+  }
+  box.innerHTML='<div class="moon-row">'+cells+'</div>';
+}
+
+/* ===== 本週提醒（規則式溫柔回顧，之後可接 AI） ===== */
+function renderWeekInsight(){
+  const box=$('weekInsight'); if(!box) return;
+  const ws=startOfWeek(new Date()).getTime();
+  const ents=state.entries.filter(e=>e.start>=ws);
+  const recN=ents.length;
+  if(recN<2){ box.innerHTML='<div class="insight">這週才剛開始，先輕鬆記幾筆，週末我再陪你一起看看。</div>'; return; }
+  const moods=ents.filter(e=>e.mood&&MOOD_SCORE[e.mood]).map(e=>MOOD_SCORE[e.mood]);
+  const moodAvg=moods.length?moods.reduce((a,b)=>a+b,0)/moods.length:0;
+  const doneSteps=state.plans.reduce((n,p)=>n+(p.tasks?p.tasks.filter(t=>t.doneAt&&t.doneAt>=ws).length:0),0);
+  const stars=ents.filter(e=>e.star).length;
+  // 時間黑洞
+  const agg=aggregate(ents); let blackTop=null;
+  if(agg.total>0){ const goalCats=new Set(state.goals.map(g=>g.cat));
+    const f=CATS.filter(c=>agg.sum[c.id]&&(agg.sum[c.id]/agg.total)>=0.25&&!goalCats.has(c.id)&&c.id!=='sleep'&&c.id!=='work');
+    if(f.length) blackTop=f[0].name;
+  }
+  let lines=[];
+  if(moodAvg>=4) lines.push('這週你的心情大致是穩定的，也記得繼續為自己留點空間。');
+  else if(moodAvg>0&&moodAvg<2.5) lines.push('這週有幾天比較低落，辛苦了。下週可以先把節奏放慢一點。');
+  else if(moodAvg>0) lines.push('這週的心情有高有低，能好好記下來，就已經是在照顧自己了。');
+  if(doneSteps>0) lines.push('你完成了 '+doneSteps+' 個小步驟，這些累積都算數。');
+  if(stars>0) lines.push('還留下了 '+stars+' 個值得記住的片刻，值得回味。');
+  if(blackTop) lines.push('「'+blackTop+'」這週佔的時間不少，下週想調整的話，可以先從一個小行動開始。');
+  if(lines.length===0) lines.push('這週你記錄了 '+recN+' 筆，謝謝你願意好好看見自己的生活。');
+  box.innerHTML='<div class="insight">'+lines.join('<br>')+'</div>';
+}
+
 function renderBlackhole(ents){
   const agg = aggregate(ents);
   const sum=agg.sum, total=agg.total;
@@ -1700,7 +1852,7 @@ function renderWeekReviewCard(){
   box.innerHTML='<div class="review-hint" id="reviewHint">'+
     '<div class="rh-text"><div class="rh-title">這週的回顧</div>'+
     '<div class="rh-sub">看看本週值得記住的片刻 →</div></div></div>';
-  $('reviewHint').onclick=()=>{ switchView('stats'); };
+  $('reviewHint').onclick=()=>{ switchView('track'); };
 }
 function currentSlot(){
   const h = new Date().getHours();
