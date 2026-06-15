@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.8</title>
+<title>生活軌跡 · v0.9.9</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -384,6 +384,27 @@
   .muse-other-label { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
   .muse-other { background: var(--card); border: 1px solid var(--line2); border-radius: 20px; padding: 7px 14px; font-family: inherit; font-size: 12px; color: var(--ink2); cursor: pointer; margin: 0 6px 6px 0; }
   .muse-other:active { opacity: 0.8; }
+  /* 醞釀過渡 */
+  .muse-brew { text-align: center; padding: 36px 20px; }
+  .muse-brew-text { font-size: 14px; color: var(--ink2); margin-top: 18px; letter-spacing: 1px; animation: museBreathe 2s ease-in-out infinite; }
+  @keyframes museBreathe { 0%,100% { opacity: 0.45; } 50% { opacity: 1; } }
+  .muse-glow { width: 60px; height: 60px; margin: 0 auto; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0%, transparent 70%); animation: museGlow 2s ease-in-out infinite; }
+  @keyframes museGlow { 0%,100% { transform: scale(0.85); opacity: 0.4; } 50% { transform: scale(1.15); opacity: 0.85; } }
+  .muse-shuffle { display: flex; justify-content: center; gap: 8px; height: 56px; align-items: center; }
+  .muse-shuffle span { width: 32px; height: 48px; border-radius: 6px; background: var(--accent); opacity: 0.7; display: inline-block; }
+  .muse-shuffle span:nth-child(1){ animation: museShuf 1.1s ease-in-out infinite; }
+  .muse-shuffle span:nth-child(2){ animation: museShuf 1.1s ease-in-out infinite 0.18s; }
+  .muse-shuffle span:nth-child(3){ animation: museShuf 1.1s ease-in-out infinite 0.36s; }
+  @keyframes museShuf { 0%,100% { transform: translateY(0) rotate(-4deg); opacity: 0.5; } 50% { transform: translateY(-12px) rotate(4deg); opacity: 0.9; } }
+  .muse-reveal { animation: museReveal 0.7s ease; }
+  @keyframes museReveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  /* 狀態選項淡入浮現 */
+  .muse-moods .muse-mood { opacity: 0; animation: museFadeUp 0.5s ease forwards; }
+  .muse-moods .muse-mood:nth-child(1){ animation-delay: 0.5s; }
+  .muse-moods .muse-mood:nth-child(2){ animation-delay: 0.7s; }
+  .muse-moods .muse-mood:nth-child(3){ animation-delay: 0.9s; }
+  .muse-moods .muse-mood:nth-child(4){ animation-delay: 1.1s; }
+  @keyframes museFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
@@ -434,7 +455,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.8</div>
+    <div class="ver">my-first-app · v0.9.9</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1504,6 +1525,7 @@ const MUSE_QUIZ = {
 };
 
 let _museMood = null;
+let _museTimer = null;
 const MUSE_META = {
   lost:    { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
   comfort: { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
@@ -1511,26 +1533,37 @@ const MUSE_META = {
   play:    { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
 };
 function renderMuse(){
-  // 標記目前選的狀態
   document.querySelectorAll('#museMoods .muse-mood').forEach(b=>{
     b.classList.toggle('on', b.dataset.mood===_museMood);
   });
   const main=$('museMain'); const others=$('museOthers');
   if(!main) return;
-  if(!_museMood){
-    main.innerHTML=''; if(others) others.innerHTML=''; return;
-  }
-  main.innerHTML = museCardHTML(MUSE_META[_museMood].key, true);
-  bindMuseCard(main);
-  // 其他選項收在下面可切換
-  if(others){
-    const rest = Object.keys(MUSE_META).filter(m=>m!==_museMood);
-    others.innerHTML = '<div class="muse-other-label">或者，換個方式陪你</div>'+
-      rest.map(m=>'<button class="muse-other" data-mood="'+m+'">'+MUSE_META[m].title+'</button>').join('');
-    others.querySelectorAll('.muse-other').forEach(b=>{
-      b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
-    });
-  }
+  if(!_museMood){ main.innerHTML=''; if(others) others.innerHTML=''; return; }
+  // 先清空其他選項（揭曉後才浮現）
+  if(others) others.innerHTML='';
+  const key = MUSE_META[_museMood].key;
+  // 醞釀過渡：塔羅用洗牌，其他用靜心凝神
+  const brewing = (key==='tarot')
+    ? '<div class="muse-card muse-brew"><div class="muse-shuffle"><span></span><span></span><span></span></div><div class="muse-brew-text">洗牌中，為你抽一張…</div></div>'
+    : '<div class="muse-card muse-brew"><div class="muse-glow"></div><div class="muse-brew-text">靜下心，讓答案慢慢浮現…</div></div>';
+  main.innerHTML = brewing;
+  // 2.5 秒後揭曉
+  clearTimeout(_museTimer);
+  _museTimer = setTimeout(()=>{
+    main.innerHTML = museCardHTML(key, true);
+    main.querySelector('.muse-card').classList.add('muse-reveal');
+    bindMuseCard(main);
+    // 揭曉後才浮現其他選項
+    if(others){
+      const rest = Object.keys(MUSE_META).filter(m=>m!==_museMood);
+      others.innerHTML = '<div class="muse-other-label">或者，換個方式陪你</div>'+
+        rest.map(m=>'<button class="muse-other" data-mood="'+m+'">'+MUSE_META[m].title+'</button>').join('');
+      others.classList.add('muse-reveal');
+      others.querySelectorAll('.muse-other').forEach(b=>{
+        b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
+      });
+    }
+  }, 2500);
 }
 function museCardHTML(key, withMeta){
   let inner='';
