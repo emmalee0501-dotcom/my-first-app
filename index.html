@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.14</title>
+<title>生活軌跡 · v0.9.15</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -185,6 +185,8 @@
   .cal-cell.sel { background: var(--accent); color: #fff; }
   .cal-cell .bars { display: flex; gap: 2px; margin-top: 3px; height: 4px; }
   .cal-cell .bars i { width: 4px; height: 4px; border-radius: 50%; }
+  .cal-moon { position: absolute; top: 2px; right: 3px; font-size: 9px; line-height: 1; opacity: 0.7; }
+  .cal-cell.sel .cal-moon { opacity: 0.95; }
 
   .week-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .week-row .wlabel { width: 36px; font-size: 12px; color: var(--ink2); flex-shrink: 0; }
@@ -517,7 +519,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.14</div>
+    <div class="ver">my-first-app · v0.9.15</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -543,16 +545,6 @@
   </section>
 
   <section class="view" id="v-track">
-    <div class="sect-title">本週心情總覽</div>
-    <div class="card2" id="moodWeek"></div>
-    <div class="sect-title">活躍時段</div>
-    <div class="card2" id="activeSlots"></div>
-    <div class="sect-title">本週月相</div>
-    <div class="card2" id="moonWeek"></div>
-    <div class="sect-title">本週值得記住</div>
-    <div id="weekKeepsakes"></div>
-    <div class="sect-title">本週提醒</div>
-    <div class="card2" id="weekInsight"></div>
     <div class="sect-title">月曆</div>
     <div class="cal-head">
       <button class="btn ghost sm" id="prevMo">‹</button>
@@ -561,6 +553,14 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div id="calDayDetail"></div>
+    <div class="sect-title">本週心情總覽</div>
+    <div class="card2" id="moodWeek"></div>
+    <div class="sect-title">活躍時段</div>
+    <div class="card2" id="activeSlots"></div>
+    <div class="sect-title">本週值得記住</div>
+    <div id="weekKeepsakes"></div>
+    <div class="sect-title">本週提醒</div>
+    <div class="card2" id="weekInsight"></div>
     <div class="sect-title">時間分布</div>
     <div class="range-tabs" id="rangeTabs">
       <button data-r="week" class="on">本週</button>
@@ -941,7 +941,8 @@ function renderCal(){
     const cats = [...new Set(dayEntries.map(e=>e.cat))].slice(0,5);
     const bars = cats.map(c=>'<i style="background:'+catById(c).hex+'"></i>').join('');
     const cls = ['cal-cell', k===todayK?'today':'', k===calSel?'sel':''].join(' ');
-    html += '<div class="'+cls+'" data-k="'+k+'">'+d+'<div class="bars">'+bars+'</div></div>';
+    const moon = moonGlyph(moonPhase(new Date(y,m,d)));
+    html += '<div class="'+cls+'" data-k="'+k+'"><span class="cal-moon">'+moon+'</span>'+d+'<div class="bars">'+bars+'</div></div>';
   }
   $('calGrid').innerHTML = html;
   document.querySelectorAll('.cal-cell[data-k]').forEach(el=>{
@@ -1034,7 +1035,6 @@ function renderStats(){
   renderKeepsakes();
   renderMoodWeek();
   renderActiveSlots();
-  renderMoonWeek();
   renderWeekInsight();
 }
 
