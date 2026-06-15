@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.17</title>
+<title>生活軌跡 · v0.9.18</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -525,7 +525,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.17</div>
+    <div class="ver">my-first-app · v0.9.18</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -563,19 +563,17 @@
     <div id="calDayDetail"></div>
     <div class="sect-title">本週心情與時間</div>
     <div class="card2" id="moodWeek"></div>
+    <div class="sect-title">時間分布</div>
+    <div class="range-tabs" id="rangeTabs">
+      <button data-r="week" class="on">本週</button>
+      <button data-r="month">本月</button>
+      <button data-r="all">全部</button>
+    </div>
+    <div class="card2" id="statPie"></div>
     <div class="sect-title">時間黑洞偵測</div>
     <div class="card2" id="blackhole"></div>
     <div class="sect-title">本週值得記住</div>
     <div id="weekKeepsakes"></div>
-    <details class="stat-fold">
-      <summary>詳細統計</summary>
-      <div class="range-tabs" id="rangeTabs">
-        <button data-r="week" class="on">本週</button>
-        <button data-r="month">本月</button>
-        <button data-r="all">全部</button>
-      </div>
-      <div class="card2" id="statPie"></div>
-    </details>
   </section>
 
   <section class="view" id="v-goals">
