@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.18</title>
+<title>生活軌跡 · v0.9.19</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -205,17 +205,19 @@
   .stat-fold summary::-webkit-details-marker { display: none; }
   .stat-fold summary::before { content: '▸'; color: var(--ink3); transition: transform 0.2s; }
   .stat-fold[open] summary::before { transform: rotate(90deg); }
-  /* 本週心情與時間 */
-  .mw-chart { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; height: 150px; padding: 6px 2px; }
-  .mw-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; cursor: pointer; }
-  .mw-face { font-size: 16px; margin-bottom: 4px; }
-  .mw-col.empty .mw-face { color: var(--ink3); }
-  .mw-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-  .mw-bar { width: 60%; max-width: 22px; border-radius: 8px 8px 4px 4px; overflow: hidden; display: flex; flex-direction: column-reverse; transition: height 0.4s ease; }
-  .mw-bar i { width: 100%; display: block; }
-  .mw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); margin-bottom: 4px; }
-  .mw-day { font-size: 11px; color: var(--ink3); margin-top: 6px; }
-  .mw-col.today .mw-day { color: var(--accent); font-weight: 600; }
+  /* 本週心情與時間（24小時時間軸） */
+  .tl-faces { display: flex; padding-left: 22px; gap: 4px; margin-bottom: 4px; }
+  .tl-face { flex: 1; text-align: center; font-size: 15px; }
+  .tl-face.today { transform: scale(1.15); }
+  .tl-chart { display: flex; height: 168px; }
+  .tl-scale { display: flex; flex-direction: column; justify-content: space-between; width: 18px; font-size: 9px; color: var(--ink3); text-align: right; padding-right: 4px; }
+  .tl-cols { flex: 1; display: flex; gap: 4px; }
+  .tl-col { flex: 1; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  .tl-track { position: relative; width: 64%; max-width: 20px; flex: 1; background: var(--bg); border-radius: 5px; overflow: hidden; }
+  .tl-col.today .tl-track { box-shadow: 0 0 0 1.5px var(--accent); }
+  .tl-track i { position: absolute; left: 0; right: 0; display: block; opacity: 0.85; }
+  .tl-day { font-size: 11px; color: var(--ink3); margin-top: 6px; }
+  .tl-col.today .tl-day { color: var(--accent); font-weight: 600; }
   .mw-legend { font-size: 11px; color: var(--ink3); line-height: 1.6; margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--line); }
   /* 活躍時段 */
   .as-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
@@ -525,7 +527,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.18</div>
+    <div class="ver">my-first-app · v0.9.19</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1049,40 +1051,43 @@ function renderMoodWeek(){
   const ws=startOfWeek(new Date());
   const wd=['一','二','三','四','五','六','日'];
   const todayKey=dateKey(Date.now());
-  const DAY_MS=24*3600*1000;
-  let bars='';
+  // 心情表情列
+  let faces='';
+  // 24小時時間軸列（每天一直條，0點在底、24點在頂）
+  let cols='';
   for(let i=0;i<7;i++){
     const day=new Date(ws); day.setDate(day.getDate()+i);
     const k=dateKey(day.getTime());
     const isToday=(k===todayKey);
+    const dayStart=new Date(day); dayStart.setHours(0,0,0,0);
+    const dayStartMs=dayStart.getTime();
     const dayEnts=state.entries.filter(e=>e.end && dateKey(e.start)===k);
-    // 心情表情
+    // 心情
     const moods=dayEnts.filter(e=>e.mood && MOOD_SCORE[e.mood]).map(e=>MOOD_SCORE[e.mood]);
     let face='·';
     if(moods.length){ const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
       face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p); }
-    // 各類別時長堆疊（對照 24 小時）
-    const totalMs=dayEnts.reduce((s,e)=>s+(e.end-e.start),0);
-    const fillPct=Math.min(totalMs/DAY_MS*100,100); // 佔一天的比例＝長條總高
-    let seg='';
-    if(totalMs>0){
-      const bycat={};
-      dayEnts.forEach(e=>{ bycat[e.cat]=(bycat[e.cat]||0)+(e.end-e.start); });
-      Object.keys(bycat).forEach(cat=>{
-        const segPct=bycat[cat]/totalMs*100; // 此類別佔當天記錄的比例
-        seg+='<i style="height:'+segPct+'%;background:'+catById(cat).hex+'"></i>';
-      });
-    }
-    bars+='<div class="mw-col'+(isToday?' today':'')+(totalMs>0?'':' empty')+'" data-k="'+k+'">'+
-      '<span class="mw-face">'+face+'</span>'+
-      '<div class="mw-bar-wrap">'+
-        (totalMs>0?'<div class="mw-bar" style="height:'+Math.max(fillPct,6)+'%">'+seg+'</div>':'<div class="mw-dot"></div>')+
-      '</div>'+
-      '<span class="mw-day">'+wd[i]+'</span></div>';
+    faces+='<div class="tl-face'+(isToday?' today':'')+'">'+face+'</div>';
+    // 每筆記錄定位在 24 小時軸上
+    let segs='';
+    dayEnts.forEach(e=>{
+      const startH=Math.max(0,(e.start-dayStartMs)/3600000);
+      let endH=(e.end-dayStartMs)/3600000; if(endH>24)endH=24;
+      if(endH<=startH) return;
+      const bottom=startH/24*100;
+      const height=Math.max((endH-startH)/24*100,1.2);
+      segs+='<i style="bottom:'+bottom+'%;height:'+height+'%;background:'+catById(e.cat).hex+'" title="'+esc(e.text)+'" data-id="'+e.id+'"></i>';
+    });
+    cols+='<div class="tl-col'+(isToday?' today':'')+'" data-k="'+k+'"><div class="tl-track">'+segs+'</div><span class="tl-day">'+wd[i]+'</span></div>';
   }
-  box.innerHTML='<div class="mw-chart">'+bars+'</div>'+
-    '<div class="mw-legend">長條高度＝當天記錄佔一天的比例，顏色＝各類別時間；上方是當天心情</div>';
-  box.querySelectorAll('.mw-col').forEach(c=>{
+  box.innerHTML=
+    '<div class="tl-faces">'+faces+'</div>'+
+    '<div class="tl-chart">'+
+      '<div class="tl-scale"><span>24</span><span>18</span><span>12</span><span>6</span><span>0</span></div>'+
+      '<div class="tl-cols">'+cols+'</div>'+
+    '</div>'+
+    '<div class="mw-legend">直條是一天 0–24 點，色塊是各時段的記錄；上方是當天心情。點任一天看記錄。</div>';
+  box.querySelectorAll('.tl-col').forEach(c=>{
     c.onclick=()=>{ calSel=c.dataset.k; const cd=new Date(c.dataset.k); calRef=new Date(cd.getFullYear(),cd.getMonth(),1); renderCal(); renderCalDetail(); $('calDayDetail').scrollIntoView({behavior:'smooth',block:'center'}); };
   });
 }
