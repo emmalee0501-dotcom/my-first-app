@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.15</title>
+<title>生活軌跡 · v0.9.16</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -200,17 +200,18 @@
   .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
   .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-  /* 本週心情總覽 */
+  /* 本週心情與時間 */
   .mw-chart { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; height: 150px; padding: 6px 2px; }
   .mw-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; cursor: pointer; }
   .mw-face { font-size: 16px; margin-bottom: 4px; }
   .mw-col.empty .mw-face { color: var(--ink3); }
   .mw-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-  .mw-bar { width: 60%; max-width: 22px; background: var(--accent); border-radius: 8px 8px 4px 4px; opacity: 0.75; transition: height 0.4s ease; }
-  .mw-col.today .mw-bar { opacity: 1; }
+  .mw-bar { width: 60%; max-width: 22px; border-radius: 8px 8px 4px 4px; overflow: hidden; display: flex; flex-direction: column-reverse; transition: height 0.4s ease; }
+  .mw-bar i { width: 100%; display: block; }
   .mw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); margin-bottom: 4px; }
   .mw-day { font-size: 11px; color: var(--ink3); margin-top: 6px; }
   .mw-col.today .mw-day { color: var(--accent); font-weight: 600; }
+  .mw-legend { font-size: 11px; color: var(--ink3); line-height: 1.6; margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--line); }
   /* 活躍時段 */
   .as-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
   .as-name { font-size: 12px; color: var(--ink2); width: 36px; }
@@ -519,7 +520,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.15</div>
+    <div class="ver">my-first-app · v0.9.16</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -553,7 +554,7 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div id="calDayDetail"></div>
-    <div class="sect-title">本週心情總覽</div>
+    <div class="sect-title">本週心情與時間</div>
     <div class="card2" id="moodWeek"></div>
     <div class="sect-title">活躍時段</div>
     <div class="card2" id="activeSlots"></div>
@@ -1046,28 +1047,39 @@ function renderMoodWeek(){
   const ws=startOfWeek(new Date());
   const wd=['一','二','三','四','五','六','日'];
   const todayKey=dateKey(Date.now());
+  const DAY_MS=24*3600*1000;
   let bars='';
   for(let i=0;i<7;i++){
     const day=new Date(ws); day.setDate(day.getDate()+i);
     const k=dateKey(day.getTime());
-    const moods=state.entries.filter(e=>dateKey(e.start)===k && e.mood && MOOD_SCORE[e.mood])
-      .map(e=>MOOD_SCORE[e.mood]);
     const isToday=(k===todayKey);
-    if(moods.length){
-      const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
-      const h=20+(avg-1)/4*80; // 20%~100%
-      // 取最接近平均的 emoji
-      const face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p);
-      bars+='<div class="mw-col'+(isToday?' today':'')+'" data-k="'+k+'"><span class="mw-face">'+face+'</span>'+
-        '<div class="mw-bar-wrap"><div class="mw-bar" style="height:'+h+'%"></div></div>'+
-        '<span class="mw-day">'+wd[i]+'</span></div>';
-    } else {
-      bars+='<div class="mw-col empty'+(isToday?' today':'')+'" data-k="'+k+'"><span class="mw-face">·</span>'+
-        '<div class="mw-bar-wrap"><div class="mw-dot"></div></div>'+
-        '<span class="mw-day">'+wd[i]+'</span></div>';
+    const dayEnts=state.entries.filter(e=>e.end && dateKey(e.start)===k);
+    // 心情表情
+    const moods=dayEnts.filter(e=>e.mood && MOOD_SCORE[e.mood]).map(e=>MOOD_SCORE[e.mood]);
+    let face='·';
+    if(moods.length){ const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
+      face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p); }
+    // 各類別時長堆疊（對照 24 小時）
+    const totalMs=dayEnts.reduce((s,e)=>s+(e.end-e.start),0);
+    const fillPct=Math.min(totalMs/DAY_MS*100,100); // 佔一天的比例＝長條總高
+    let seg='';
+    if(totalMs>0){
+      const bycat={};
+      dayEnts.forEach(e=>{ bycat[e.cat]=(bycat[e.cat]||0)+(e.end-e.start); });
+      Object.keys(bycat).forEach(cat=>{
+        const segPct=bycat[cat]/totalMs*100; // 此類別佔當天記錄的比例
+        seg+='<i style="height:'+segPct+'%;background:'+catById(cat).hex+'"></i>';
+      });
     }
+    bars+='<div class="mw-col'+(isToday?' today':'')+(totalMs>0?'':' empty')+'" data-k="'+k+'">'+
+      '<span class="mw-face">'+face+'</span>'+
+      '<div class="mw-bar-wrap">'+
+        (totalMs>0?'<div class="mw-bar" style="height:'+Math.max(fillPct,6)+'%">'+seg+'</div>':'<div class="mw-dot"></div>')+
+      '</div>'+
+      '<span class="mw-day">'+wd[i]+'</span></div>';
   }
-  box.innerHTML='<div class="mw-chart">'+bars+'</div>';
+  box.innerHTML='<div class="mw-chart">'+bars+'</div>'+
+    '<div class="mw-legend">長條高度＝當天記錄佔一天的比例，顏色＝各類別時間；上方是當天心情</div>';
   box.querySelectorAll('.mw-col').forEach(c=>{
     c.onclick=()=>{ calSel=c.dataset.k; const cd=new Date(c.dataset.k); calRef=new Date(cd.getFullYear(),cd.getMonth(),1); renderCal(); renderCalDetail(); $('calDayDetail').scrollIntoView({behavior:'smooth',block:'center'}); };
   });
