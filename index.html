@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.7</title>
+<title>生活軌跡 · v0.9.8</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -360,6 +360,30 @@
   .pcard-en { font-size: 10px; color: var(--ink3); letter-spacing: 1px; }
   .pcard-sub { font-size: 11px; color: var(--ink2); margin-top: 4px; line-height: 1.4; }
   .pcard-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 20px; }
+  .muse-intro { margin-bottom: 16px; }
+  .muse-q { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 12px; text-align: center; }
+  .muse-moods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .muse-mood { background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
+  .muse-mood.on { border-color: var(--accent); color: var(--accent); }
+  .muse-mood:active { opacity: 0.8; }
+  .muse-card { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .muse-card-head { margin-bottom: 14px; }
+  .muse-card-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .muse-card-sub { font-size: 12px; color: var(--ink3); margin-left: 8px; }
+  .muse-big { font-size: 17px; line-height: 1.8; color: var(--ink); text-align: center; padding: 14px 4px; }
+  .muse-tarot-name { font-size: 22px; font-weight: 600; color: var(--accent); text-align: center; }
+  .muse-tarot-up { font-size: 13px; color: var(--ink2); text-align: center; margin-top: 4px; }
+  .muse-tarot-hint { font-size: 14px; color: var(--ink); line-height: 1.7; text-align: center; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--line); }
+  .muse-quiz-q { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 12px; }
+  .muse-quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+  .muse-quiz-opt { background: var(--bg); border: 1px solid var(--line2); border-radius: 10px; padding: 11px 14px; font-family: inherit; font-size: 14px; color: var(--ink); cursor: pointer; text-align: left; }
+  .muse-quiz-opt.on { border-color: var(--accent); color: var(--accent); }
+  .muse-quiz-result { display: none; font-size: 14px; color: var(--ink2); line-height: 1.8; margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 10px; }
+  .muse-again { margin-top: 14px; background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; display: block; }
+  .muse-others { margin-top: 4px; }
+  .muse-other-label { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
+  .muse-other { background: var(--card); border: 1px solid var(--line2); border-radius: 20px; padding: 7px 14px; font-family: inherit; font-size: 12px; color: var(--ink2); cursor: pointer; margin: 0 6px 6px 0; }
+  .muse-other:active { opacity: 0.8; }
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
@@ -410,7 +434,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.7</div>
+    <div class="ver">my-first-app · v0.9.8</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -477,6 +501,20 @@
     <button class="btn ghost" id="addGoalBtn" style="width:100%;margin-top:8px;">＋ 新增數據型目標</button>
   </section>
 
+  <section class="view" id="v-muse">
+    <div class="muse-intro">
+      <div class="muse-q">現在的你，比較想要什麼？</div>
+      <div class="muse-moods" id="museMoods">
+        <button class="muse-mood" data-mood="lost">迷惘，想找方向</button>
+        <button class="muse-mood" data-mood="comfort">想被安慰一下</button>
+        <button class="muse-mood" data-mood="advice">想要一個觀點</button>
+        <button class="muse-mood" data-mood="play">想輕鬆玩一下</button>
+      </div>
+    </div>
+    <div id="museMain"></div>
+    <div class="muse-others" id="museOthers"></div>
+  </section>
+
   <section class="view" id="v-partner">
     <div class="partner-current" id="partnerCurrent"></div>
     <div class="sect-title">選擇同行夥伴</div>
@@ -492,6 +530,7 @@
   <button class="tab" data-v="cal"><span class="ic">📅</span>日曆</button>
   <button class="tab" data-v="stats"><span class="ic">🍩</span>統計</button>
   <button class="tab" data-v="goals"><span class="ic">🎯</span>目標</button>
+  <button class="tab" data-v="muse"><span class="ic">✨</span>靈感</button>
   <button class="tab" data-v="partner"><span class="ic">🤍</span>夥伴</button>
 </nav>
 
@@ -1070,6 +1109,9 @@ document.querySelectorAll('#rangeTabs button').forEach(b=>{
   b.onclick=()=>{ document.querySelectorAll('#rangeTabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); statRange=b.dataset.r; renderStats(); };
 });
 $('startBtn').onclick = startRunning;
+document.querySelectorAll('#museMoods .muse-mood').forEach(b=>{
+  b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
+});
 $('entryInput').addEventListener('keydown', e=>{ if(e.key==='Enter') startRunning(); });
 $('fabAdd').onclick = ()=> openEntryModal(null);
 ['entryModal','goalModal'].forEach(id=>{
@@ -1414,7 +1456,117 @@ function renderPartner(){
   }
 }
 
-/* ============ 每週回顧 ============ */
+/* ============ 靈感 ============ */
+// 今日小語（安慰）
+const MUSE_WORDS = [
+  '你已經很努力了，可以休息一下。',
+  '慢一點沒關係，你正走在自己的路上。',
+  '今天的你，值得被溫柔對待。',
+  '不必完美，你這樣就很好。',
+  '深呼吸，把肩膀放鬆。一切會慢慢好起來。',
+  '你不需要一個人扛下所有事。',
+  '允許自己有情緒，那是你誠實的證明。',
+  '把今天過完，就已經很了不起了。',
+  '你的價值，不是由完成多少事決定的。',
+  '此刻的平靜，也是一種前進。',
+];
+// 問心籤（迷惘找方向）— 帶反思的提問
+const MUSE_GUIDES = [
+  '如果不怕失敗，你現在最想做的是什麼？',
+  '你有多久，沒有好好問過自己想要什麼了？',
+  '現在讓你猶豫的，是真的困難，還是害怕？',
+  '把選項縮到只剩一個，你的心會選哪個？',
+  '十年後的你，會希望現在的你怎麼做？',
+  '你是在逃避什麼，還是在走向什麼？',
+  '如果這件事沒有人會知道，你還會做嗎？',
+  '你想要的，和你以為該要的，是同一個嗎？',
+];
+// 塔羅（觀點）— 簡版牌義
+const MUSE_TAROT = [
+  { name:'愚者', up:'新的開始、純粹、勇敢踏出', hint:'也許可以給未知一點空間，不用全部想清楚才出發。' },
+  { name:'力量', up:'溫柔的堅韌、內在的勇氣', hint:'真正的力量，是溫柔地堅持，而不是硬撐。' },
+  { name:'星星', up:'希望、療癒、指引', hint:'就算現在很暗，也別忘了你心裡那顆星。' },
+  { name:'節制', up:'平衡、耐心、調和', hint:'不急著要答案，讓事情慢慢找到它的節奏。' },
+  { name:'太陽', up:'喜悅、明朗、生命力', hint:'允許自己感受單純的快樂，那不是奢侈。' },
+  { name:'隱者', up:'內省、獨處、尋找內在', hint:'給自己一段安靜的時間，答案往往在裡面。' },
+  { name:'月亮', up:'直覺、情緒、未明', hint:'有些迷霧不必急著驅散，先和它共處一下。' },
+  { name:'命運之輪', up:'轉變、流動、循環', hint:'低潮會過去，就像輪子一定會再轉上來。' },
+];
+// 心理小測驗（玩）— 至少4選項
+const MUSE_QUIZ = {
+  q: '如果現在能瞬間移動到一個地方，你最想去哪？',
+  opts: [
+    { label:'安靜的海邊', result:'你內心渴望沉澱與留白。最近也許太滿了，給自己一段獨處的時間吧。' },
+    { label:'熱鬧的城市', result:'你渴望連結與新鮮感。去見見人、換個場景，能幫你充電。' },
+    { label:'山裡的小屋', result:'你想要的是安全感與踏實。把生活的節奏穩下來，會讓你安心。' },
+    { label:'沒去過的異國', result:'你正渴望突破與冒險。心裡有個想嘗試的念頭，也許可以開始了。' },
+  ],
+};
+
+let _museMood = null;
+const MUSE_META = {
+  lost:    { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
+  comfort: { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
+  advice:  { key:'tarot',  title:'塔羅・抽一張', sub:'一個觀察自己的角度，僅供參考' },
+  play:    { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
+};
+function renderMuse(){
+  // 標記目前選的狀態
+  document.querySelectorAll('#museMoods .muse-mood').forEach(b=>{
+    b.classList.toggle('on', b.dataset.mood===_museMood);
+  });
+  const main=$('museMain'); const others=$('museOthers');
+  if(!main) return;
+  if(!_museMood){
+    main.innerHTML=''; if(others) others.innerHTML=''; return;
+  }
+  main.innerHTML = museCardHTML(MUSE_META[_museMood].key, true);
+  bindMuseCard(main);
+  // 其他選項收在下面可切換
+  if(others){
+    const rest = Object.keys(MUSE_META).filter(m=>m!==_museMood);
+    others.innerHTML = '<div class="muse-other-label">或者，換個方式陪你</div>'+
+      rest.map(m=>'<button class="muse-other" data-mood="'+m+'">'+MUSE_META[m].title+'</button>').join('');
+    others.querySelectorAll('.muse-other').forEach(b=>{
+      b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
+    });
+  }
+}
+function museCardHTML(key, withMeta){
+  let inner='';
+  if(key==='word'){ inner='<div class="muse-big">'+esc(pick(MUSE_WORDS))+'</div>'; }
+  else if(key==='guide'){ inner='<div class="muse-big">'+esc(pick(MUSE_GUIDES))+'</div>'; }
+  else if(key==='tarot'){
+    const t=pick(MUSE_TAROT);
+    inner='<div class="muse-tarot-name">'+esc(t.name)+'</div><div class="muse-tarot-up">'+esc(t.up)+'</div><div class="muse-tarot-hint">'+esc(t.hint)+'</div>';
+  }
+  else if(key==='quiz'){
+    inner='<div class="muse-quiz-q">'+esc(MUSE_QUIZ.q)+'</div><div class="muse-quiz-opts">'+
+      MUSE_QUIZ.opts.map((o,i)=>'<button class="muse-quiz-opt" data-qi="'+i+'">'+esc(o.label)+'</button>').join('')+
+      '</div><div class="muse-quiz-result" id="museQuizResult"></div>';
+  }
+  const meta = MUSE_META[Object.keys(MUSE_META).find(m=>MUSE_META[m].key===key)];
+  const head = withMeta && meta ? '<div class="muse-card-head"><span class="muse-card-title">'+meta.title+'</span><span class="muse-card-sub">'+meta.sub+'</span></div>' : '';
+  const again = '<button class="muse-again" data-key="'+key+'">再來一次</button>';
+  return '<div class="muse-card">'+head+inner+again+'</div>';
+}
+function bindMuseCard(scope){
+  // 再來一次
+  scope.querySelectorAll('.muse-again').forEach(b=>{
+    b.onclick=()=>{ renderMuse(); };
+  });
+  // 測驗選項
+  scope.querySelectorAll('.muse-quiz-opt').forEach(b=>{
+    b.onclick=()=>{
+      const i=+b.dataset.qi;
+      const res=$('museQuizResult');
+      if(res){ res.textContent=MUSE_QUIZ.opts[i].result; res.style.display='block'; }
+      scope.querySelectorAll('.muse-quiz-opt').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+    };
+  });
+}
+
 function computeWeekReview(){
   const s = startOfWeek(new Date()).getTime();
   const ents = state.entries.filter(e=>e.start>=s);
