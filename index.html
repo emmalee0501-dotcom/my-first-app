@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.12</title>
+<title>生活軌跡 · v0.9.13</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -222,6 +222,34 @@
     display: none; align-items: flex-end; justify-content: center; z-index: 100;
   }
   .modal-bg.on { display: flex; }
+  .onb-bg {
+    position: fixed; inset: 0; background: var(--bg);
+    display: none; align-items: center; justify-content: center; z-index: 200; padding: 24px;
+  }
+  .onb-bg.on { display: flex; }
+  .onb-card { width: 100%; max-width: 460px; max-height: 92vh; overflow-y: auto; }
+  .onb-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; }
+  .onb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line2); transition: all 0.3s; }
+  .onb-dot.on { background: var(--accent); width: 20px; border-radius: 4px; }
+  .onb-h { font-size: 20px; font-weight: 600; color: var(--ink); text-align: center; margin-bottom: 8px; }
+  .onb-sub { font-size: 13px; color: var(--ink3); text-align: center; line-height: 1.7; margin-bottom: 22px; }
+  .onb-partners { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 22px; }
+  .onb-partner { background: var(--card); border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px 10px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .onb-partner.on { border-color: var(--accent); background: var(--bg); }
+  .onb-pemoji { font-size: 24px; }
+  .onb-pname { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .onb-psub { font-size: 11px; color: var(--ink3); }
+  .onb-themes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+  .onb-theme { background: var(--card); border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px; font-family: inherit; cursor: pointer; }
+  .onb-theme.on { border-color: var(--accent); }
+  .onb-sw { display: flex; gap: 4px; justify-content: center; margin-bottom: 8px; }
+  .onb-sw i { width: 20px; height: 20px; border-radius: 50%; }
+  .onb-tname { display: block; font-size: 13px; color: var(--ink); text-align: center; }
+  .onb-cares { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 22px; }
+  .onb-care { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 9px 16px; font-family: inherit; font-size: 14px; color: var(--ink2); cursor: pointer; }
+  .onb-care.on { border-color: var(--accent); color: var(--accent); }
+  .onb-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .onb-skip { background: none; border: none; color: var(--ink3); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
   .modal {
     background: var(--card); border-radius: 22px 22px 0 0; padding: 22px 20px 32px;
     width: 100%; max-width: 480px; max-height: 86vh; overflow-y: auto;
@@ -461,7 +489,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.12</div>
+    <div class="ver">my-first-app · v0.9.13</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -650,6 +678,13 @@
   </div>
 </div>
 
+<div class="onb-bg" id="onbScreen">
+  <div class="onb-card">
+    <div class="onb-progress" id="onbProgress"></div>
+    <div class="onb-body" id="onbBody"></div>
+  </div>
+</div>
+
 <script>
 const STORE_KEY = 'life_tracker_v1';
 const THEME_KEY = 'life_tracker_theme';
@@ -703,9 +738,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [] };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -1715,7 +1750,87 @@ $('themeBtn').onclick = ()=>{ renderThemeGrid(); applyAmbient(); $('themeModal')
 $('themeClose').onclick = ()=> $('themeModal').classList.remove('on');
 $('themeModal').onclick = e=>{ if(e.target.id==='themeModal') $('themeModal').classList.remove('on'); };
 
+/* ============ 初次設定（最多3步，輕量可跳過） ============ */
+let _onbStep = 0;
+let _onbPick = { partner:null, theme:null, cares:[] };
+const ONB_CARES = [
+  { id:'rest', label:'好好休息' },
+  { id:'body', label:'照顧身體' },
+  { id:'study', label:'學習成長' },
+  { id:'emotion', label:'安頓情緒' },
+  { id:'work', label:'工作節奏' },
+  { id:'social', label:'人際關係' },
+];
+function startOnboarding(){
+  _onbStep = 0;
+  _onbPick = { partner:null, theme:null, cares:[] };
+  $('onbScreen').classList.add('on');
+  renderOnbStep();
+}
+function finishOnboarding(){
+  if(_onbPick.partner) state.partner = _onbPick.partner;
+  if(_onbPick.theme) applyTheme(_onbPick.theme);
+  state.onboarded = true;
+  save();
+  $('onbScreen').classList.remove('on');
+  renderAll();
+}
+function renderOnbStep(){
+  const prog=$('onbProgress'); const body=$('onbBody');
+  if(prog) prog.innerHTML = [0,1,2].map(i=>'<span class="onb-dot '+(i===_onbStep?'on':'')+'"></span>').join('');
+  if(_onbStep===0){
+    body.innerHTML = '<div class="onb-h">先選一位同行夥伴</div>'+
+      '<div class="onb-sub">他會用自己的方式陪你記錄、給你回應。之後隨時能換。</div>'+
+      '<div class="onb-partners">'+PARTNERS.map(p=>
+        '<button class="onb-partner '+(_onbPick.partner===p.id?'on':'')+'" data-pid="'+p.id+'">'+
+        '<span class="onb-pemoji">'+p.emoji+'</span><span class="onb-pname">'+p.zh+'</span><span class="onb-psub">'+p.sub.split(' · ')[0]+'</span></button>'
+      ).join('')+'</div>'+
+      onbNav(true);
+    body.querySelectorAll('.onb-partner').forEach(b=>{
+      b.onclick=()=>{ _onbPick.partner = (_onbPick.partner===b.dataset.pid?null:b.dataset.pid); renderOnbStep(); };
+    });
+  } else if(_onbStep===1){
+    body.innerHTML = '<div class="onb-h">挑一個喜歡的氛圍</div>'+
+      '<div class="onb-sub">選一個此刻順眼的色調，之後也能在主題裡換。</div>'+
+      '<div class="onb-themes">'+THEMES.map(t=>
+        '<button class="onb-theme '+(_onbPick.theme===t.id?'on':'')+'" data-tid="'+t.id+'">'+
+        '<span class="onb-sw">'+t.sw.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span>'+
+        '<span class="onb-tname">'+t.name+'</span></button>'
+      ).join('')+'</div>'+
+      onbNav(true);
+    body.querySelectorAll('.onb-theme').forEach(b=>{
+      b.onclick=()=>{ _onbPick.theme=b.dataset.tid; applyTheme(b.dataset.tid); renderOnbStep(); };
+    });
+  } else {
+    body.innerHTML = '<div class="onb-h">最近，最想照顧自己哪一塊？</div>'+
+      '<div class="onb-sub">可以選幾個，也可以先跳過。這只是幫你起個頭。</div>'+
+      '<div class="onb-cares">'+ONB_CARES.map(c=>
+        '<button class="onb-care '+(_onbPick.cares.includes(c.id)?'on':'')+'" data-cid="'+c.id+'">'+c.label+'</button>'
+      ).join('')+'</div>'+
+      onbNav(false, true);
+    body.querySelectorAll('.onb-care').forEach(b=>{
+      b.onclick=()=>{
+        const id=b.dataset.cid;
+        if(_onbPick.cares.includes(id)) _onbPick.cares=_onbPick.cares.filter(x=>x!==id);
+        else _onbPick.cares.push(id);
+        renderOnbStep();
+      };
+    });
+  }
+  const back=$('onbBack'); if(back) back.onclick=()=>{ if(_onbStep>0){ _onbStep--; renderOnbStep(); } };
+  const next=$('onbNext'); if(next) next.onclick=()=>{ if(_onbStep<2){ _onbStep++; renderOnbStep(); } else { finishOnboarding(); } };
+  const skip=$('onbSkip'); if(skip) skip.onclick=()=> finishOnboarding();
+}
+function onbNav(showSkip, isLast){
+  return '<div class="onb-nav">'+
+    (_onbStep>0?'<button class="btn ghost sm" id="onbBack">上一步</button>':'<span></span>')+
+    (showSkip?'<button class="onb-skip" id="onbSkip">先略過</button>':'')+
+    '<button class="btn sm" id="onbNext">'+(isLast?'開始使用':'下一步')+'</button>'+
+  '</div>';
+}
+
 renderAll();
+if(!state.onboarded){ startOnboarding(); }
 </script>
 </body>
 </html>
