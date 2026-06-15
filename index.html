@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.11</title>
+<title>生活軌跡 · v0.9.12</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -375,6 +375,8 @@
   .muse-card-sub { font-size: 12px; color: var(--ink3); margin-left: 8px; }
   .muse-big { font-size: 17px; line-height: 1.8; color: var(--ink); text-align: center; padding: 14px 4px; }
   .muse-tarot-name { font-size: 22px; font-weight: 600; color: var(--accent); text-align: center; }
+  .muse-tarot-name.reversed { transform: rotate(180deg); }
+  .muse-tarot-pos { font-size: 12px; color: var(--ink3); text-align: center; margin-top: 6px; letter-spacing: 2px; }
   .muse-tarot-up { font-size: 13px; color: var(--ink2); text-align: center; margin-top: 4px; }
   .muse-tarot-hint { font-size: 14px; color: var(--ink); line-height: 1.7; text-align: center; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--line); }
   .muse-quiz-q { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 12px; }
@@ -459,7 +461,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.11</div>
+    <div class="ver">my-first-app · v0.9.12</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -1509,14 +1511,22 @@ const MUSE_GUIDES = [
 ];
 // 塔羅（觀點）— 簡版牌義
 const MUSE_TAROT = [
-  { name:'愚者', up:'新的開始、純粹、勇敢踏出', hint:'也許可以給未知一點空間，不用全部想清楚才出發。' },
-  { name:'力量', up:'溫柔的堅韌、內在的勇氣', hint:'真正的力量，是溫柔地堅持，而不是硬撐。' },
-  { name:'星星', up:'希望、療癒、指引', hint:'就算現在很暗，也別忘了你心裡那顆星。' },
-  { name:'節制', up:'平衡、耐心、調和', hint:'不急著要答案，讓事情慢慢找到它的節奏。' },
-  { name:'太陽', up:'喜悅、明朗、生命力', hint:'允許自己感受單純的快樂，那不是奢侈。' },
-  { name:'隱者', up:'內省、獨處、尋找內在', hint:'給自己一段安靜的時間，答案往往在裡面。' },
-  { name:'月亮', up:'直覺、情緒、未明', hint:'有些迷霧不必急著驅散，先和它共處一下。' },
-  { name:'命運之輪', up:'轉變、流動、循環', hint:'低潮會過去，就像輪子一定會再轉上來。' },
+  { name:'愚者', up:'新的開始、純粹、勇敢踏出', hint:'也許可以給未知一點空間，不用全部想清楚才出發。',
+    rev:'猶豫、不安、還沒準備好', revHint:'還沒準備好也沒關係，不必逼自己馬上跨出去。' },
+  { name:'力量', up:'溫柔的堅韌、內在的勇氣', hint:'真正的力量，是溫柔地堅持，而不是硬撐。',
+    rev:'自我懷疑、用力過度', revHint:'你是不是太用力了？允許自己軟一點，也是一種力量。' },
+  { name:'星星', up:'希望、撫慰、指引', hint:'就算現在很暗，也別忘了你心裡那顆星。',
+    rev:'失去方向、暫時看不到光', revHint:'看不到光的時候，先照顧好自己，光會慢慢回來。' },
+  { name:'節制', up:'平衡、耐心、調和', hint:'不急著要答案，讓事情慢慢找到它的節奏。',
+    rev:'失衡、急躁、想要趕快', revHint:'最近是不是有點失衡？慢下來，先把自己穩住。' },
+  { name:'太陽', up:'喜悅、明朗、生命力', hint:'允許自己感受單純的快樂，那不是奢侈。',
+    rev:'疲憊、暫時提不起勁', revHint:'提不起勁也沒關係，先休息，不用勉強發光。' },
+  { name:'隱者', up:'內省、獨處、尋找內在', hint:'給自己一段安靜的時間，答案往往在裡面。',
+    rev:'孤單、想被理解', revHint:'獨處久了也會想被理解，別忘了還有人可以靠近。' },
+  { name:'月亮', up:'直覺、情緒、未明', hint:'有些迷霧不必急著驅散，先和它共處一下。',
+    rev:'不安漸散、看清真相', revHint:'迷霧正在散開，你會慢慢看清楚的，再給一點時間。' },
+  { name:'命運之輪', up:'轉變、流動、循環', hint:'低潮會過去，就像輪子一定會再轉上來。',
+    rev:'卡住、停滯、想抓住', revHint:'卡住的時候，與其用力抓，不如先放手讓它流動。' },
 ];
 // 心理小測驗（玩）— 至少4選項
 const MUSE_QUIZ = {
@@ -1583,7 +1593,14 @@ function museCardHTML(key, withMeta){
   else if(key==='guide'){ inner='<div class="muse-big">'+esc(pick(MUSE_GUIDES))+'</div>'; }
   else if(key==='tarot'){
     const t=pick(MUSE_TAROT);
-    inner='<div class="muse-tarot-name">'+esc(t.name)+'</div><div class="muse-tarot-up">'+esc(t.up)+'</div><div class="muse-tarot-hint">'+esc(t.hint)+'</div>';
+    const reversed = Math.random()<0.5;
+    const posLabel = reversed ? '逆位' : '正位';
+    const meaning = reversed ? t.rev : t.up;
+    const hint = reversed ? t.revHint : t.hint;
+    inner='<div class="muse-tarot-name'+(reversed?' reversed':'')+'">'+esc(t.name)+'</div>'+
+      '<div class="muse-tarot-pos">'+posLabel+'</div>'+
+      '<div class="muse-tarot-up">'+esc(meaning)+'</div>'+
+      '<div class="muse-tarot-hint">'+esc(hint)+'</div>';
   }
   else if(key==='quiz'){
     inner='<div class="muse-quiz-q">'+esc(MUSE_QUIZ.q)+'</div><div class="muse-quiz-opts">'+
