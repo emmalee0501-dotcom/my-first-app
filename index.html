@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.10</title>
+<title>生活軌跡 · v0.9.11</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -362,6 +362,9 @@
   .pcard-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 20px; }
   .muse-intro { margin-bottom: 16px; }
   .muse-q { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 12px; text-align: center; }
+  .muse-chosen-bar { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; animation: museReveal 0.5s ease; }
+  .muse-chosen-label { font-size: 14px; color: var(--ink2); }
+  .muse-reset { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
   .muse-moods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .muse-mood { background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
   .muse-mood.on { border-color: var(--accent); color: var(--accent); }
@@ -456,7 +459,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.10</div>
+    <div class="ver">my-first-app · v0.9.11</div>
     <button id="themeBtn" aria-label="切換主題">◐ 主題</button>
   </header>
 
@@ -524,8 +527,8 @@
   </section>
 
   <section class="view" id="v-muse">
-    <div class="muse-intro">
-      <div class="muse-q">現在的你，比較想要什麼？</div>
+    <div class="muse-intro" id="museIntro">
+      <div class="muse-q" id="museQ">現在的你，比較想要什麼？</div>
       <div class="muse-moods" id="museMoods">
         <button class="muse-mood" data-mood="lost">迷惘，想找方向</button>
         <button class="muse-mood" data-mood="comfort">想被安慰一下</button>
@@ -533,6 +536,7 @@
         <button class="muse-mood" data-mood="play">想輕鬆玩一下</button>
       </div>
     </div>
+    <div id="museChosen"></div>
     <div id="museMain"></div>
     <div class="muse-others" id="museOthers"></div>
   </section>
@@ -1534,27 +1538,34 @@ const MUSE_META = {
   play:    { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
 };
 function renderMuse(){
-  document.querySelectorAll('#museMoods .muse-mood').forEach(b=>{
-    b.classList.toggle('on', b.dataset.mood===_museMood);
-  });
+  const intro=$('museIntro'); const chosen=$('museChosen');
   const main=$('museMain'); const others=$('museOthers');
   if(!main) return;
-  if(!_museMood){ main.innerHTML=''; if(others) others.innerHTML=''; return; }
-  // 先清空其他選項（揭曉後才浮現）
+  if(!_museMood){
+    // 回到起點：問句+選項顯示，其他清空
+    if(intro) intro.style.display='';
+    if(chosen) chosen.innerHTML='';
+    main.innerHTML=''; if(others) others.innerHTML='';
+    return;
+  }
+  // 選了狀態：收起問句與選項，改顯示「你現在想要：XX · 重新感受」
+  if(intro) intro.style.display='none';
+  if(chosen){
+    chosen.innerHTML='<div class="muse-chosen-bar"><span class="muse-chosen-label">你現在想要：'+MUSE_META[_museMood].title+'</span><button class="muse-reset" id="museReset">重新感受</button></div>';
+    const rb=$('museReset');
+    if(rb) rb.onclick=()=>{ _museMood=null; renderMuse(); };
+  }
   if(others) others.innerHTML='';
   const key = MUSE_META[_museMood].key;
-  // 醞釀過渡：塔羅用洗牌，其他用靜心凝神
   const brewing = (key==='tarot')
     ? '<div class="muse-card muse-brew"><div class="muse-shuffle"><span></span><span></span><span></span></div><div class="muse-brew-text">洗牌中，為你抽一張…</div></div>'
     : '<div class="muse-card muse-brew"><div class="muse-glow"></div><div class="muse-brew-text">靜下心，讓答案慢慢浮現…</div></div>';
   main.innerHTML = brewing;
-  // 2.5 秒後揭曉
   clearTimeout(_museTimer);
   _museTimer = setTimeout(()=>{
     main.innerHTML = museCardHTML(key, true);
     main.querySelector('.muse-card').classList.add('muse-reveal');
     bindMuseCard(main);
-    // 揭曉後才浮現其他選項
     if(others){
       const rest = Object.keys(MUSE_META).filter(m=>m!==_museMood);
       others.innerHTML = '<div class="muse-other-label">或者，換個方式陪你</div>'+
