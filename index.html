@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.21</title>
+<title>生活軌跡 · v0.9.22</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -550,7 +550,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.21</div>
+    <div class="ver">my-first-app · v0.9.22</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -1856,12 +1856,8 @@ function renderMuse(){
   }
   if(others) others.innerHTML='';
   const key = MUSE_META[_museMood].key;
-  const brewing = (key==='tarot')
-    ? '<div class="muse-card muse-brew"><div class="muse-shuffle"><span></span><span></span><span></span></div><div class="muse-brew-text">洗牌中，為你抽一張…</div></div>'
-    : '<div class="muse-card muse-brew"><div class="muse-glow"></div><div class="muse-brew-text">靜下心，讓答案慢慢浮現…</div></div>';
-  main.innerHTML = brewing;
-  clearTimeout(_museTimer);
-  _museTimer = setTimeout(()=>{
+  // 揭曉內容（抽成共用函式）
+  const reveal = ()=>{
     main.innerHTML = museCardHTML(key, true);
     main.querySelector('.muse-card').classList.add('muse-reveal');
     bindMuseCard(main);
@@ -1874,7 +1870,17 @@ function renderMuse(){
         b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
       });
     }
-  }, 2500);
+  };
+  // 星座運勢 → 直接顯示，不走醞釀過渡（已選好直接看運勢，沒選則直接選星座）
+  if(key==='horoscope'){ main.innerHTML=''; reveal(); return; }
+  // 醞釀過渡：塔羅較長(儀式感)，其他較短
+  const brewing = (key==='tarot')
+    ? '<div class="muse-card muse-brew"><div class="muse-shuffle"><span></span><span></span><span></span></div><div class="muse-brew-text">洗牌中，為你抽一張…</div></div>'
+    : '<div class="muse-card muse-brew"><div class="muse-glow"></div><div class="muse-brew-text">靜下心，讓答案慢慢浮現…</div></div>';
+  main.innerHTML = brewing;
+  const brewMs = (key==='tarot') ? 2500 : 1200;
+  clearTimeout(_museTimer);
+  _museTimer = setTimeout(reveal, brewMs);
 }
 function museCardHTML(key, withMeta){
   let inner='';
