@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.26</title>
+<title>生活軌跡 · v0.9.27</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -384,6 +384,7 @@
   .ts-chips { display: flex; flex-wrap: wrap; gap: 7px; }
   .ts-chip { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; }
   .ts-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .ts-emoji { margin-right: 4px; }
   .ambient {
     border-radius: 18px; overflow: hidden; margin-bottom: 14px;
     border: 0.5px solid var(--line2);
@@ -560,7 +561,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.26</div>
+    <div class="ver">my-first-app · v0.9.27</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -904,8 +905,8 @@ function endRunning(){
 
 // 今日心境 + 今日意圖（可改，記住今天的選擇，隔天重置）
 const TODAY_MOODS = [
-  { id:'calm', label:'平靜' }, { id:'tired', label:'疲憊' }, { id:'low', label:'低落' },
-  { id:'expect', label:'期待' }, { id:'messy', label:'混亂' }, { id:'driven', label:'有動力' },
+  { id:'calm', label:'平靜', emoji:'😌' }, { id:'tired', label:'疲憊', emoji:'😮‍💨' }, { id:'low', label:'低落', emoji:'😔' },
+  { id:'expect', label:'期待', emoji:'✨' }, { id:'messy', label:'混亂', emoji:'😵‍💫' }, { id:'driven', label:'有動力', emoji:'💪' },
 ];
 const TODAY_CARES = [
   { id:'rest', label:'休息' }, { id:'focus', label:'專注' }, { id:'emotion', label:'情緒' },
@@ -922,7 +923,7 @@ function renderTodayState(){
   const box=$('todayState'); if(!box) return;
   const ts=getTodayState();
   const moodBtns=TODAY_MOODS.map(m=>
-    '<button class="ts-chip'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'">'+m.label+'</button>').join('');
+    '<button class="ts-chip'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'"><span class="ts-emoji">'+m.emoji+'</span>'+m.label+'</button>').join('');
   const careBtns=TODAY_CARES.map(c=>
     '<button class="ts-chip'+(ts.cares.includes(c.id)?' on':'')+'" data-tscare="'+c.id+'">'+c.label+'</button>').join('');
   box.innerHTML=
