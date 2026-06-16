@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.22</title>
+<title>生活軌跡 · v0.9.23</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -550,7 +550,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.22</div>
+    <div class="ver">my-first-app · v0.9.23</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -628,13 +628,14 @@
         <button class="muse-mood" data-mood="comfort">想被安慰一下</button>
         <button class="muse-mood" data-mood="advice">想要一個觀點</button>
         <button class="muse-mood" data-mood="calm">想讓自己安定</button>
-        <button class="muse-mood" data-mood="horoscope">想看今天的方向</button>
         <button class="muse-mood" data-mood="play">想輕鬆玩一下</button>
       </div>
     </div>
     <div id="museChosen"></div>
     <div id="museMain"></div>
     <div class="muse-others" id="museOthers"></div>
+    <div class="sect-title" style="margin-top:24px;">今日星座</div>
+    <div class="card2" id="museHoroscope"></div>
   </section>
 
   <section class="view" id="v-partner">
@@ -1398,6 +1399,7 @@ function renderAll(){
   renderGoals();
   renderActivePlans();
   renderPartner();
+  renderHoroscope();
   renderWeekReviewCard();
 }
 
@@ -1827,13 +1829,14 @@ const ZODIAC_LINES = {
 };
 
 
+let _museMood = null;
+let _museTimer = null;
 let _museZodiac = null; // 使用者選的太陽星座 id
 const MUSE_META = {
   lost:      { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
   comfort:   { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
   advice:    { key:'tarot',  title:'塔羅・抽一張', sub:'一個觀察自己的角度，僅供參考' },
   calm:      { key:'calm',   title:'靜心小練習', sub:'花一點點時間，安定下來' },
-  horoscope: { key:'horoscope', title:'星座運勢', sub:'看看今天適合照顧哪一塊' },
   play:      { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
 };
 function renderMuse(){
@@ -1872,7 +1875,6 @@ function renderMuse(){
     }
   };
   // 星座運勢 → 直接顯示，不走醞釀過渡（已選好直接看運勢，沒選則直接選星座）
-  if(key==='horoscope'){ main.innerHTML=''; reveal(); return; }
   // 醞釀過渡：塔羅較長(儀式感)，其他較短
   const brewing = (key==='tarot')
     ? '<div class="muse-card muse-brew"><div class="muse-shuffle"><span></span><span></span><span></span></div><div class="muse-brew-text">洗牌中，為你抽一張…</div></div>'
@@ -1881,6 +1883,32 @@ function renderMuse(){
   const brewMs = (key==='tarot') ? 2500 : 1200;
   clearTimeout(_museTimer);
   _museTimer = setTimeout(reveal, brewMs);
+}
+// 今日星座（常駐在靈感頁下方，每天固定，不隨重整變動）
+function _horoSeed(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))>>>0; } return h; }
+function _horoPick(arr, seed, salt){ return arr[(_horoSeed(seed+salt))%arr.length]; }
+function renderHoroscope(){
+  const box=$('museHoroscope'); if(!box) return;
+  if(!_museZodiac){
+    box.innerHTML='<div class="muse-zodiac-pick"><div class="muse-zodiac-ask">選你的星座，看今天的方向</div><div class="muse-zodiac-grid">'+
+      ZODIAC.map(z=>'<button class="muse-zodiac-opt" data-zid="'+z.id+'">'+z.name+'<span>'+z.d+'</span></button>').join('')+
+      '</div></div>';
+  } else {
+    const z=ZODIAC.find(x=>x.id===_museZodiac);
+    const seed=dateKey(Date.now())+_museZodiac;
+    box.innerHTML='<div class="muse-horo-name">'+z.name+'<button class="muse-horo-change" id="zodiacChange">換星座</button></div>'+
+      '<div class="muse-horo-row"><span class="muse-horo-label">今日</span>'+esc(_horoPick(ZODIAC_LINES.theme,seed,'t'))+'</div>'+
+      '<div class="muse-horo-row"><span class="muse-horo-label">人際 / 愛情</span>'+esc(_horoPick(ZODIAC_LINES.love,seed,'l'))+'</div>'+
+      '<div class="muse-horo-row"><span class="muse-horo-label">財運</span>'+esc(_horoPick(ZODIAC_LINES.money,seed,'m'))+'</div>'+
+      '<div class="muse-horo-row"><span class="muse-horo-label">工作</span>'+esc(_horoPick(ZODIAC_LINES.work,seed,'w'))+'</div>'+
+      '<div class="muse-horo-row"><span class="muse-horo-label">小行動</span>'+esc(_horoPick(ZODIAC_LINES.action,seed,'a'))+'</div>'+
+      '<div class="muse-horo-foot">適合照顧：'+_horoPick(ZODIAC_LINES.care,seed,'c')+'　僅供參考，給你一個今天的方向</div>';
+  }
+  box.querySelectorAll('.muse-zodiac-opt').forEach(b=>{
+    b.onclick=()=>{ _museZodiac=b.dataset.zid; try{localStorage.setItem('life_tracker_zodiac',_museZodiac);}catch(e){} renderHoroscope(); };
+  });
+  const zc=box.querySelector('#zodiacChange');
+  if(zc) zc.onclick=()=>{ _museZodiac=null; try{localStorage.removeItem('life_tracker_zodiac');}catch(e){} renderHoroscope(); };
 }
 function museCardHTML(key, withMeta){
   let inner='';
@@ -1906,28 +1934,10 @@ function museCardHTML(key, withMeta){
     const c=pick(MUSE_CALM);
     inner='<div class="muse-calm-name">'+esc(c.name)+'</div><div class="muse-calm-steps">'+esc(c.steps)+'</div>';
   }
-  else if(key==='horoscope'){
-    if(!_museZodiac){
-      // 還沒選星座：顯示選星座
-      inner='<div class="muse-zodiac-pick"><div class="muse-zodiac-ask">先選你的星座</div><div class="muse-zodiac-grid">'+
-        ZODIAC.map(z=>'<button class="muse-zodiac-opt" data-zid="'+z.id+'">'+z.name+'<span>'+z.d+'</span></button>').join('')+
-        '</div></div>';
-    } else {
-      const z=ZODIAC.find(x=>x.id===_museZodiac);
-      inner='<div class="muse-horo-name">'+z.name+'<button class="muse-horo-change" id="zodiacChange">換星座</button></div>'+
-        '<div class="muse-horo-row"><span class="muse-horo-label">今日</span>'+esc(pick(ZODIAC_LINES.theme))+'</div>'+
-        '<div class="muse-horo-row"><span class="muse-horo-label">人際 / 愛情</span>'+esc(pick(ZODIAC_LINES.love))+'</div>'+
-        '<div class="muse-horo-row"><span class="muse-horo-label">財運</span>'+esc(pick(ZODIAC_LINES.money))+'</div>'+
-        '<div class="muse-horo-row"><span class="muse-horo-label">工作</span>'+esc(pick(ZODIAC_LINES.work))+'</div>'+
-        '<div class="muse-horo-row"><span class="muse-horo-label">小行動</span>'+esc(pick(ZODIAC_LINES.action))+'</div>'+
-        '<div class="muse-horo-foot">適合照顧：'+pick(ZODIAC_LINES.care)+'　僅供參考，給你一個今天的方向</div>';
-    }
-  }
   const meta = MUSE_META[Object.keys(MUSE_META).find(m=>MUSE_META[m].key===key)];
   const head = withMeta && meta ? '<div class="muse-card-head"><span class="muse-card-title">'+meta.title+'</span><span class="muse-card-sub">'+meta.sub+'</span></div>' : '';
   // 星座還沒選時不顯示「再來一次」
-  const hideAgain = (key==='horoscope' && !_museZodiac);
-  const again = hideAgain ? '' : '<button class="muse-again" data-key="'+key+'">再來一次</button>';
+  const again = '<button class="muse-again" data-key="'+key+'">再來一次</button>';
   return '<div class="muse-card">'+head+inner+again+'</div>';
 }
 function bindMuseCard(scope){
@@ -1935,13 +1945,6 @@ function bindMuseCard(scope){
   scope.querySelectorAll('.muse-again').forEach(b=>{
     b.onclick=()=>{ renderMuse(); };
   });
-  // 選星座
-  scope.querySelectorAll('.muse-zodiac-opt').forEach(b=>{
-    b.onclick=()=>{ _museZodiac=b.dataset.zid; try{localStorage.setItem('life_tracker_zodiac',_museZodiac);}catch(e){} renderMuse(); };
-  });
-  // 換星座
-  const zc=scope.querySelector('#zodiacChange');
-  if(zc) zc.onclick=()=>{ _museZodiac=null; try{localStorage.removeItem('life_tracker_zodiac');}catch(e){} renderMuse(); };
   // 測驗選項：選完選項消失，只留「你的選擇 + 結果」
   scope.querySelectorAll('.muse-quiz-opt').forEach(b=>{
     b.onclick=()=>{
