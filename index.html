@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.25</title>
+<title>生活軌跡 · v0.9.26</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -378,6 +378,12 @@
   .theme-opt .tname { font-size: 13px; color: var(--ink); font-weight: 500; }
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
+  .today-state { margin-bottom: 4px; }
+  .ts-block { margin-bottom: 12px; }
+  .ts-label { font-size: 13px; color: var(--ink2); margin-bottom: 8px; }
+  .ts-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .ts-chip { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; }
+  .ts-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .ambient {
     border-radius: 18px; overflow: hidden; margin-bottom: 14px;
     border: 0.5px solid var(--line2);
@@ -554,7 +560,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.25</div>
+    <div class="ver">my-first-app · v0.9.26</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -567,6 +573,7 @@
       </div>
     </div>
     <div id="weekReviewCard"></div>
+    <div class="today-state" id="todayState"></div>
     <div id="todaySchedule"></div>
     <div class="live" id="liveBox">
       <div class="input-row">
@@ -819,9 +826,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -895,6 +902,41 @@ function endRunning(){
   renderRunning(); renderAll();
 }
 
+// 今日心境 + 今日意圖（可改，記住今天的選擇，隔天重置）
+const TODAY_MOODS = [
+  { id:'calm', label:'平靜' }, { id:'tired', label:'疲憊' }, { id:'low', label:'低落' },
+  { id:'expect', label:'期待' }, { id:'messy', label:'混亂' }, { id:'driven', label:'有動力' },
+];
+const TODAY_CARES = [
+  { id:'rest', label:'休息' }, { id:'focus', label:'專注' }, { id:'emotion', label:'情緒' },
+  { id:'body', label:'身體' }, { id:'work', label:'工作節奏' }, { id:'social', label:'人際關係' },
+];
+function getTodayState(){
+  const today=dateKey(Date.now());
+  if(!state.todayState || state.todayState.date!==today){
+    state.todayState={ date:today, mood:null, cares:[] }; // 隔天重置
+  }
+  return state.todayState;
+}
+function renderTodayState(){
+  const box=$('todayState'); if(!box) return;
+  const ts=getTodayState();
+  const moodBtns=TODAY_MOODS.map(m=>
+    '<button class="ts-chip'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'">'+m.label+'</button>').join('');
+  const careBtns=TODAY_CARES.map(c=>
+    '<button class="ts-chip'+(ts.cares.includes(c.id)?' on':'')+'" data-tscare="'+c.id+'">'+c.label+'</button>').join('');
+  box.innerHTML=
+    '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
+    '<div class="ts-block"><div class="ts-label">今天想照顧</div><div class="ts-chips">'+careBtns+'</div></div>';
+  box.querySelectorAll('[data-tsmood]').forEach(b=>{
+    b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood; save(); renderTodayState(); };
+  });
+  box.querySelectorAll('[data-tscare]').forEach(b=>{
+    b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tscare;
+      const i=ts.cares.indexOf(id); if(i>=0)ts.cares.splice(i,1); else ts.cares.push(id);
+      save(); renderTodayState(); };
+  });
+}
 function renderToday(){
   const today = dateKey(Date.now());
   const list = state.entries.filter(e=>dateKey(e.start)===today).sort((a,b)=>b.start-a.start);
@@ -1396,6 +1438,7 @@ $('fabAdd').onclick = ()=> openEntryModal(null);
 function renderAll(){
   renderRunning();
   renderToday();
+  renderTodayState();
   renderTodaySchedule();
   renderCal(); renderCalDetail();
   renderStats();
