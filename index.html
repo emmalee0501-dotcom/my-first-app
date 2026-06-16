@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.29</title>
+<title>生活軌跡 · v0.9.30</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -574,7 +574,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.29</div>
+    <div class="ver">my-first-app · v0.9.30</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -847,9 +847,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; s.journals=s.journals||[]; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; s.journals=s.journals||[]; s.moodHistory=s.moodHistory||{}; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null, journals: [] };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null, journals: [], moodHistory: {} };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -950,7 +950,10 @@ function renderTodayState(){
     '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
     '<div class="ts-block"><div class="ts-label">今天想照顧</div><div class="ts-chips">'+careBtns+'</div></div>';
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
-    b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood; save(); renderTodayState(); };
+    b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
+      // 同步寫入心情歷史（給週圖用，優先於記錄心情）
+      if(ts.mood){ state.moodHistory[ts.date]=ts.mood; } else { delete state.moodHistory[ts.date]; }
+      save(); renderTodayState(); renderMoodWeek(); };
   });
   box.querySelectorAll('[data-tscare]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tscare;
@@ -1190,11 +1193,17 @@ function renderMoodWeek(){
     const dayStart=new Date(day); dayStart.setHours(0,0,0,0);
     const dayStartMs=dayStart.getTime();
     const dayEnts=state.entries.filter(e=>e.end && dateKey(e.start)===k);
-    // 心情
-    const moods=dayEnts.filter(e=>e.mood && MOOD_SCORE[e.mood]).map(e=>MOOD_SCORE[e.mood]);
+    // 心情：優先用「今日心境」(moodHistory)，沒設才用當天記錄的心情平均
     let face='·';
-    if(moods.length){ const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
-      face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p); }
+    const tm = state.moodHistory && state.moodHistory[k];
+    if(tm){
+      const tmObj = TODAY_MOODS.find(m=>m.id===tm);
+      if(tmObj) face=tmObj.emoji;
+    } else {
+      const moods=dayEnts.filter(e=>e.mood && MOOD_SCORE[e.mood]).map(e=>MOOD_SCORE[e.mood]);
+      if(moods.length){ const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
+        face=Object.keys(MOOD_SCORE).reduce((p,c)=>Math.abs(MOOD_SCORE[c]-avg)<Math.abs(MOOD_SCORE[p]-avg)?c:p); }
+    }
     faces+='<div class="tl-face'+(isToday?' today':'')+'">'+face+'</div>';
     // 每筆記錄定位在 24 小時軸上
     let segs='';
