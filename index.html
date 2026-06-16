@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.31</title>
+<title>生活軌跡 · v0.9.32</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -577,7 +577,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.31</div>
+    <div class="ver">my-first-app · v0.9.32</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -1365,7 +1365,10 @@ function goalProgress(g){
   let pct, done;
   if(g.dir==='gte'){ pct=g.target? Math.min(current/g.target*100,100):0; done=current>=g.target; }
   else { pct = g.target? Math.min(current/g.target*100,100):0; done=current<=g.target; }
-  return { current, unit, pct, done };
+  // 顯示換算：時數型若以分鐘為單位，顯示值×60、單位改分鐘
+  let dispCurrent=current, dispTarget=g.target, dispUnit=unit;
+  if(g.type==='hours' && g.displayUnit==='min'){ dispCurrent=current*60; dispTarget=g.target*60; dispUnit='分鐘'; }
+  return { current, unit, pct, done, dispCurrent, dispTarget, dispUnit };
 }
 function renderGoals(){
   const box = $('goalList');
@@ -1375,16 +1378,17 @@ function renderGoals(){
     const cat = catById(g.cat);
     const typeName = {hours:'每週時數', count:'每週次數', ratio:'時間比例'}[g.type];
     const dirSym = g.dir==='gte'?'≥':'≤';
-    const cur = g.type==='hours'? p.current.toFixed(1) : g.type==='ratio'? p.current.toFixed(0) : p.current;
+    const cur = g.type==='hours'? (p.dispUnit==='分鐘'? Math.round(p.dispCurrent) : p.dispCurrent.toFixed(1)) : g.type==='ratio'? p.current.toFixed(0) : p.current;
+    const tgt = (g.type==='hours' && p.dispUnit==='分鐘') ? Math.round(p.dispTarget) : (g.type==='hours'? p.dispTarget : g.target);
     const streak = g.streak||0;
     return '<div class="goal '+(p.done?'done':'')+'" data-id="'+g.id+'">'+
       '<div class="gtop"><div>'+
-        '<div class="gname"><span class="dot" style="background:'+cat.hex+';display:inline-block;margin-right:6px"></span>'+cat.name+' '+dirSym+' '+g.target+p.unit+'</div>'+
+        '<div class="gname"><span class="dot" style="background:'+cat.hex+';display:inline-block;margin-right:6px"></span>'+cat.name+' '+dirSym+' '+tgt+p.dispUnit+'</div>'+
         '<div class="gtype">'+typeName+' · '+(p.done?'已達成 ✓':'進行中')+'</div>'+
       '</div>'+
       '<button class="del" data-del="'+g.id+'">×</button></div>'+
       '<div class="progress"><i style="width:'+p.pct.toFixed(0)+'%"></i></div>'+
-      '<div class="gval" style="margin-top:6px">目前 '+cur+p.unit+' / 目標 '+dirSym+' '+g.target+p.unit+'</div>'+
+      '<div class="gval" style="margin-top:6px">目前 '+cur+p.dispUnit+' / 目標 '+dirSym+' '+tgt+p.dispUnit+'</div>'+
       (streak>0?'<div class="gstreak">🔥 連續達標 '+streak+' 週</div>':'')+
     '</div>';
   }).join('');
@@ -1474,9 +1478,12 @@ $('gmCancel').onclick = ()=> $('goalModal').classList.remove('on');
 $('gmSave').onclick = ()=>{
   let target=parseFloat($('gmTarget').value);
   if(isNaN(target)||target<0){ alert('請輸入有效的目標數值'); return; }
-  // 時數型且選分鐘 → 換算成小時儲存（統計一律以小時為單位）
-  if($('gmType').value==='hours' && $('gmUnit').value==='min'){ target = target/60; }
-  state.goals.push({ id:'g'+Date.now(), type:$('gmType').value, cat:gmCat, dir:$('gmDir').value, target, streak:0 });
+  const isMin = ($('gmType').value==='hours' && $('gmUnit').value==='min');
+  // 時數型一律以小時儲存（統計一致）；記住顯示單位
+  if(isMin){ target = target/60; }
+  const goal = { id:'g'+Date.now(), type:$('gmType').value, cat:gmCat, dir:$('gmDir').value, target, streak:0 };
+  if($('gmType').value==='hours') goal.displayUnit = isMin ? 'min' : 'hour';
+  state.goals.push(goal);
   save(); $('goalModal').classList.remove('on'); renderGoals();
 };
 $('addGoalBtn').onclick = openGoalModal;
