@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.20</title>
+<title>生活軌跡 · v0.9.21</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -460,6 +460,20 @@
   .muse-quiz-opt.on { border-color: var(--accent); color: var(--accent); }
   .muse-quiz-result { display: none; font-size: 14px; color: var(--ink2); line-height: 1.8; margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 10px; }
   .muse-quiz-pick { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+  /* 靜心小練習 */
+  .muse-calm-name { font-size: 17px; font-weight: 600; color: var(--accent); text-align: center; margin-bottom: 10px; }
+  .muse-calm-steps { font-size: 15px; color: var(--ink); line-height: 1.9; text-align: center; padding: 0 4px; }
+  /* 星座運勢 */
+  .muse-zodiac-ask { font-size: 14px; color: var(--ink2); text-align: center; margin-bottom: 12px; }
+  .muse-zodiac-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .muse-zodiac-opt { background: var(--bg); border: 1px solid var(--line2); border-radius: 10px; padding: 10px 4px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .muse-zodiac-opt span { font-size: 10px; color: var(--ink3); }
+  .muse-zodiac-opt:active { border-color: var(--accent); }
+  .muse-horo-name { font-size: 18px; font-weight: 600; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .muse-horo-change { background: none; border: none; color: var(--ink3); font-family: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; }
+  .muse-horo-row { font-size: 14px; color: var(--ink); line-height: 1.7; margin-bottom: 10px; display: flex; gap: 8px; }
+  .muse-horo-label { flex-shrink: 0; font-size: 12px; color: var(--accent); width: 56px; padding-top: 1px; }
+  .muse-horo-foot { font-size: 12px; color: var(--ink3); margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--line); line-height: 1.6; }
   .muse-again { margin-top: 14px; background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; display: block; }
   .muse-others { margin-top: 4px; }
   .muse-other-label { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
@@ -536,7 +550,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.20</div>
+    <div class="ver">my-first-app · v0.9.21</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -613,6 +627,8 @@
         <button class="muse-mood" data-mood="lost">迷惘，想找方向</button>
         <button class="muse-mood" data-mood="comfort">想被安慰一下</button>
         <button class="muse-mood" data-mood="advice">想要一個觀點</button>
+        <button class="muse-mood" data-mood="calm">想讓自己安定</button>
+        <button class="muse-mood" data-mood="horoscope">想看今天的方向</button>
         <button class="muse-mood" data-mood="play">想輕鬆玩一下</button>
       </div>
     </div>
@@ -1776,13 +1792,49 @@ const MUSE_QUIZ = {
   ],
 };
 
-let _museMood = null;
-let _museTimer = null;
+// 靜心小練習（想安定）— 輕量，不叫冥想
+const MUSE_CALM = [
+  { name:'一分鐘呼吸', steps:'吸氣 4 秒，停 2 秒，吐氣 6 秒。重複幾次，把注意力放回呼吸上就好。' },
+  { name:'睡前回顧', steps:'想三件今天還算順利的小事，不用很大，能想起來就算。' },
+  { name:'感恩記錄', steps:'寫下一個今天讓你覺得溫暖或慶幸的瞬間，一句話就夠。' },
+  { name:'身體掃描', steps:'從頭到腳慢慢感受一遍，哪裡緊就停一下，輕輕放鬆它。' },
+  { name:'情緒安放', steps:'說出現在的感覺（例如：我有點累）。不用解決它，先承認它就好。' },
+  { name:'伸展提醒', steps:'站起來，雙手往上延展，肩膀轉一轉。給身體一點空間。' },
+];
+// 星座運勢（想看今天的方向）— 12 星座，語氣輕盈留餘地
+const ZODIAC = [
+  { id:'aries', name:'牡羊座', d:'3/21–4/19' },
+  { id:'taurus', name:'金牛座', d:'4/20–5/20' },
+  { id:'gemini', name:'雙子座', d:'5/21–6/20' },
+  { id:'cancer', name:'巨蟹座', d:'6/21–7/22' },
+  { id:'leo', name:'獅子座', d:'7/23–8/22' },
+  { id:'virgo', name:'處女座', d:'8/23–9/22' },
+  { id:'libra', name:'天秤座', d:'9/23–10/23' },
+  { id:'scorpio', name:'天蠍座', d:'10/24–11/22' },
+  { id:'sagittarius', name:'射手座', d:'11/23–12/21' },
+  { id:'capricorn', name:'摩羯座', d:'12/22–1/19' },
+  { id:'aquarius', name:'水瓶座', d:'1/20–2/18' },
+  { id:'pisces', name:'雙魚座', d:'2/19–3/20' },
+];
+// 每個面向多組短文案，每天隨機抽（語氣輕盈、留餘地）
+const ZODIAC_LINES = {
+  theme: ['今天適合放慢腳步，順著感覺走就好。','今天的能量適合收一收，先把手邊一件事做完。','今天很適合主動一點，想做的事不妨試試看。','今天適合留白，不用把行程塞滿。','今天適合整理，把混亂的地方稍微理一理。'],
+  love: ['人緣不錯，今天容易被注意到，也許會遇到聊得來的人。','和親近的人之間氣氛溫暖，適合好好說說話。','今天的你有種放鬆的魅力，順其自然就好。','感情上可以多一點主動，但別給自己太大壓力。','適合修補一段最近有點疏遠的關係。'],
+  money: ['財運上可能有個小驚喜，但別急著大手筆。','今天適合記帳、看看錢花去哪，會有點小收穫。','可能有意外的小進帳或好康，留意一下。','花費上多想一秒，能避開一筆衝動消費。','適合為未來做個小規劃，不用今天就決定。'],
+  work: ['工作上專注力不錯，適合處理需要動腦的事。','今天適合收尾，把拖著的小事結掉會很有成就感。','靈感來得快，想到什麼先記下來。','適合跟人協作，別一個人硬扛。','步調可以放慢，品質比速度重要。'],
+  care: ['情緒','人際','身體','工作節奏','生活'],
+  action: ['先完成一件 15 分鐘內能結束的小事。','給自己泡杯喜歡的飲料，喘口氣。','出門走走，換個場景。','早點睡，讓身體休息夠。','寫下一件今天想感謝的事。'],
+};
+
+
+let _museZodiac = null; // 使用者選的太陽星座 id
 const MUSE_META = {
-  lost:    { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
-  comfort: { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
-  advice:  { key:'tarot',  title:'塔羅・抽一張', sub:'一個觀察自己的角度，僅供參考' },
-  play:    { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
+  lost:      { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
+  comfort:   { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
+  advice:    { key:'tarot',  title:'塔羅・抽一張', sub:'一個觀察自己的角度，僅供參考' },
+  calm:      { key:'calm',   title:'靜心小練習', sub:'花一點點時間，安定下來' },
+  horoscope: { key:'horoscope', title:'星座運勢', sub:'看看今天適合照顧哪一塊' },
+  play:      { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
 };
 function renderMuse(){
   const intro=$('museIntro'); const chosen=$('museChosen');
@@ -1844,9 +1896,32 @@ function museCardHTML(key, withMeta){
       MUSE_QUIZ.opts.map((o,i)=>'<button class="muse-quiz-opt" data-qi="'+i+'">'+esc(o.label)+'</button>').join('')+
       '</div><div class="muse-quiz-result" id="museQuizResult"></div>';
   }
+  else if(key==='calm'){
+    const c=pick(MUSE_CALM);
+    inner='<div class="muse-calm-name">'+esc(c.name)+'</div><div class="muse-calm-steps">'+esc(c.steps)+'</div>';
+  }
+  else if(key==='horoscope'){
+    if(!_museZodiac){
+      // 還沒選星座：顯示選星座
+      inner='<div class="muse-zodiac-pick"><div class="muse-zodiac-ask">先選你的星座</div><div class="muse-zodiac-grid">'+
+        ZODIAC.map(z=>'<button class="muse-zodiac-opt" data-zid="'+z.id+'">'+z.name+'<span>'+z.d+'</span></button>').join('')+
+        '</div></div>';
+    } else {
+      const z=ZODIAC.find(x=>x.id===_museZodiac);
+      inner='<div class="muse-horo-name">'+z.name+'<button class="muse-horo-change" id="zodiacChange">換星座</button></div>'+
+        '<div class="muse-horo-row"><span class="muse-horo-label">今日</span>'+esc(pick(ZODIAC_LINES.theme))+'</div>'+
+        '<div class="muse-horo-row"><span class="muse-horo-label">人際 / 愛情</span>'+esc(pick(ZODIAC_LINES.love))+'</div>'+
+        '<div class="muse-horo-row"><span class="muse-horo-label">財運</span>'+esc(pick(ZODIAC_LINES.money))+'</div>'+
+        '<div class="muse-horo-row"><span class="muse-horo-label">工作</span>'+esc(pick(ZODIAC_LINES.work))+'</div>'+
+        '<div class="muse-horo-row"><span class="muse-horo-label">小行動</span>'+esc(pick(ZODIAC_LINES.action))+'</div>'+
+        '<div class="muse-horo-foot">適合照顧：'+pick(ZODIAC_LINES.care)+'　僅供參考，給你一個今天的方向</div>';
+    }
+  }
   const meta = MUSE_META[Object.keys(MUSE_META).find(m=>MUSE_META[m].key===key)];
   const head = withMeta && meta ? '<div class="muse-card-head"><span class="muse-card-title">'+meta.title+'</span><span class="muse-card-sub">'+meta.sub+'</span></div>' : '';
-  const again = '<button class="muse-again" data-key="'+key+'">再來一次</button>';
+  // 星座還沒選時不顯示「再來一次」
+  const hideAgain = (key==='horoscope' && !_museZodiac);
+  const again = hideAgain ? '' : '<button class="muse-again" data-key="'+key+'">再來一次</button>';
   return '<div class="muse-card">'+head+inner+again+'</div>';
 }
 function bindMuseCard(scope){
@@ -1854,6 +1929,13 @@ function bindMuseCard(scope){
   scope.querySelectorAll('.muse-again').forEach(b=>{
     b.onclick=()=>{ renderMuse(); };
   });
+  // 選星座
+  scope.querySelectorAll('.muse-zodiac-opt').forEach(b=>{
+    b.onclick=()=>{ _museZodiac=b.dataset.zid; try{localStorage.setItem('life_tracker_zodiac',_museZodiac);}catch(e){} renderMuse(); };
+  });
+  // 換星座
+  const zc=scope.querySelector('#zodiacChange');
+  if(zc) zc.onclick=()=>{ _museZodiac=null; try{localStorage.removeItem('life_tracker_zodiac');}catch(e){} renderMuse(); };
   // 測驗選項：選完選項消失，只留「你的選擇 + 結果」
   scope.querySelectorAll('.muse-quiz-opt').forEach(b=>{
     b.onclick=()=>{
@@ -2039,6 +2121,7 @@ function onbNav(showSkip, isLast){
   '</div>';
 }
 
+try{ _museZodiac = localStorage.getItem('life_tracker_zodiac') || null; }catch(e){}
 renderAll();
 if(!state.onboarded){ startOnboarding(); }
 </script>
