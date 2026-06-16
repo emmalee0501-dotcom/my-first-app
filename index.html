@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.28</title>
+<title>生活軌跡 · v0.9.29</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -379,6 +379,18 @@
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
   .today-state { margin-bottom: 4px; }
+  .journal-box { display: flex; flex-direction: column; gap: 8px; }
+  .journal-box textarea { width: 100%; border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--card); resize: vertical; line-height: 1.6; box-sizing: border-box; }
+  .journal-box textarea:focus { outline: none; border-color: var(--accent); }
+  .journal-box .btn { align-self: flex-end; }
+  .journal-item { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-top: 10px; border: 0.5px solid var(--line); }
+  .journal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .journal-time { font-size: 12px; color: var(--ink3); }
+  .journal-acts { display: flex; gap: 10px; align-items: center; }
+  .journal-star { background: none; border: none; font-size: 16px; color: var(--ink3); cursor: pointer; padding: 0; }
+  .journal-star.on { color: var(--accent); }
+  .journal-del { background: none; border: none; font-size: 12px; color: var(--ink3); cursor: pointer; }
+  .journal-text { font-size: 14px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
   .ts-block { margin-bottom: 12px; }
   .ts-label { font-size: 13px; color: var(--ink2); margin-bottom: 8px; }
   .ts-chips { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -562,7 +574,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.28</div>
+    <div class="ver">my-first-app · v0.9.29</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -586,6 +598,13 @@
       <div id="replySlot"></div>
     </div>
     <div id="todayList"></div>
+    <div class="sect-title" style="margin-top:22px;">今日覺察</div>
+    <div class="wish-sub" style="margin:0 4px 10px;">寫下一點今天的心情，不用很完整。</div>
+    <div class="journal-box">
+      <textarea id="journalInput" rows="2" placeholder="今天有什麼感覺想留下？"></textarea>
+      <button class="btn" id="journalBtn">記下來</button>
+    </div>
+    <div id="journalToday"></div>
   </section>
 
   <section class="view" id="v-track">
@@ -828,9 +847,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; s.journals=s.journals||[]; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null, journals: [] };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -937,6 +956,30 @@ function renderTodayState(){
     b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tscare;
       const i=ts.cares.indexOf(id); if(i>=0)ts.cares.splice(i,1); else ts.cares.push(id);
       save(); renderTodayState(); };
+  });
+}
+// 今日覺察（情緒日記）：今日頁寫，軌跡頁回顧
+function addJournal(){
+  const inp=$('journalInput'); if(!inp) return;
+  const text=inp.value.trim(); if(!text) return;
+  state.journals.push({ id:'j'+Date.now()+Math.random().toString(36).slice(2,6), date:dateKey(Date.now()), ts:Date.now(), text, star:false });
+  inp.value=''; save(); renderJournalToday();
+}
+function renderJournalToday(){
+  const box=$('journalToday'); if(!box) return;
+  const today=dateKey(Date.now());
+  const list=state.journals.filter(j=>j.date===today).sort((a,b)=>b.ts-a.ts);
+  if(!list.length){ box.innerHTML=''; return; }
+  box.innerHTML=list.map(j=>
+    '<div class="journal-item"><div class="journal-head"><span class="journal-time">'+fmtTime(j.ts)+'</span>'+
+      '<div class="journal-acts"><button class="journal-star'+(j.star?' on':'')+'" data-jstar="'+j.id+'">'+(j.star?'★':'☆')+'</button>'+
+      '<button class="journal-del" data-jdel="'+j.id+'">刪除</button></div></div>'+
+      '<div class="journal-text">'+esc(j.text)+'</div></div>').join('');
+  box.querySelectorAll('[data-jstar]').forEach(b=>{
+    b.onclick=()=>{ const j=state.journals.find(x=>x.id===b.dataset.jstar); if(j){ j.star=!j.star; save(); renderJournalToday(); } };
+  });
+  box.querySelectorAll('[data-jdel]').forEach(b=>{
+    b.onclick=()=>{ state.journals=state.journals.filter(x=>x.id!==b.dataset.jdel); save(); renderJournalToday(); };
   });
 }
 function renderToday(){
@@ -1428,6 +1471,7 @@ document.querySelectorAll('#rangeTabs button').forEach(b=>{
   b.onclick=()=>{ document.querySelectorAll('#rangeTabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); statRange=b.dataset.r; renderStats(); };
 });
 $('startBtn').onclick = startRunning;
+$('journalBtn').onclick = addJournal;
 document.querySelectorAll('#museMoods .muse-mood').forEach(b=>{
   b.onclick=()=>{ _museMood=b.dataset.mood; renderMuse(); };
 });
@@ -1441,6 +1485,7 @@ function renderAll(){
   renderRunning();
   renderToday();
   renderTodayState();
+  renderJournalToday();
   renderTodaySchedule();
   renderCal(); renderCalDetail();
   renderStats();
