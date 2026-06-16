@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.30</title>
+<title>生活軌跡 · v0.9.31</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -215,7 +215,7 @@
   .stat-fold summary::before { content: '▸'; color: var(--ink3); transition: transform 0.2s; }
   .stat-fold[open] summary::before { transform: rotate(90deg); }
   /* 本週心情與時間（24小時時間軸） */
-  .tl-faces { display: flex; padding-left: 22px; gap: 4px; margin-bottom: 4px; }
+  .tl-faces { display: flex; padding-left: 22px; gap: 4px; margin-bottom: 10px; }
   .tl-face { flex: 1; text-align: center; font-size: 15px; }
   .tl-face.today { transform: scale(1.15); }
   .tl-chart { display: flex; height: 168px; }
@@ -309,6 +309,9 @@
     padding: 11px 13px; font-size: 15px; font-family: inherit; background: var(--card); color: var(--ink); outline: none;
   }
   .field input:focus, .field select:focus { border-color: var(--accent); }
+  .gm-target-row { display: flex; gap: 8px; }
+  .gm-target-row #gmTarget { flex: 1; }
+  .gm-target-row #gmUnit { width: 90px; flex-shrink: 0; }
   .row2 { display: flex; gap: 10px; }
   .row2 > * { flex: 1; }
   .modal-btns { display: flex; gap: 10px; margin-top: 8px; }
@@ -574,7 +577,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.30</div>
+    <div class="ver">my-first-app · v0.9.31</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -751,7 +754,13 @@
     </div>
     <div class="field">
       <label id="gmTargetLabel">目標數值</label>
-      <input id="gmTarget" type="number" step="0.5" placeholder="例如 5">
+      <div class="gm-target-row">
+        <input id="gmTarget" type="number" step="0.5" placeholder="例如 5">
+        <select id="gmUnit">
+          <option value="hour">小時</option>
+          <option value="min">分鐘</option>
+        </select>
+      </div>
       <div class="hint" id="gmHint">時數型：每週小時數</div>
     </div>
     <div class="modal-btns">
@@ -1444,18 +1453,29 @@ $('emDelete').onclick = ()=>{
 };
 
 let gmCat='work';
-const GM_HINTS = { hours:'時數型：每週累計小時數', count:'次數型：每週累計次數', ratio:'比例型：佔總時間的百分比' };
+const GM_HINTS = { hours:'時數型：每週累計時間', count:'次數型：每週累計次數', ratio:'比例型：佔總時間的百分比' };
+function gmSyncUnit(){
+  const isHours = $('gmType').value==='hours';
+  $('gmUnit').style.display = isHours ? '' : 'none';
+  // 分鐘時範例改成 30，小時時 5
+  if(isHours && $('gmUnit').value==='min'){ $('gmTarget').placeholder='例如 30'; $('gmTarget').step='5'; }
+  else { $('gmTarget').placeholder='例如 5'; $('gmTarget').step='0.5'; }
+}
 function openGoalModal(){
-  gmCat='work'; $('gmType').value='hours'; $('gmDir').value='gte'; $('gmTarget').value='';
+  gmCat='work'; $('gmType').value='hours'; $('gmDir').value='gte'; $('gmTarget').value=''; $('gmUnit').value='hour';
   buildCatPick('gmCatPick', gmCat, c=>gmCat=c);
   $('gmHint').textContent = GM_HINTS.hours;
+  gmSyncUnit();
   $('goalModal').classList.add('on');
 }
-$('gmType').onchange = ()=>{ $('gmHint').textContent = GM_HINTS[$('gmType').value]; $('gmDir').value = $('gmType').value==='ratio'?'lte':'gte'; };
+$('gmType').onchange = ()=>{ $('gmHint').textContent = GM_HINTS[$('gmType').value]; $('gmDir').value = $('gmType').value==='ratio'?'lte':'gte'; gmSyncUnit(); };
+$('gmUnit').onchange = gmSyncUnit;
 $('gmCancel').onclick = ()=> $('goalModal').classList.remove('on');
 $('gmSave').onclick = ()=>{
-  const target=parseFloat($('gmTarget').value);
+  let target=parseFloat($('gmTarget').value);
   if(isNaN(target)||target<0){ alert('請輸入有效的目標數值'); return; }
+  // 時數型且選分鐘 → 換算成小時儲存（統計一律以小時為單位）
+  if($('gmType').value==='hours' && $('gmUnit').value==='min'){ target = target/60; }
   state.goals.push({ id:'g'+Date.now(), type:$('gmType').value, cat:gmCat, dir:$('gmDir').value, target, streak:0 });
   save(); $('goalModal').classList.remove('on'); renderGoals();
 };
@@ -1683,6 +1703,7 @@ function suggestPlans(){
   const cat=classifyWish(text);
   const mode= isProjectWish(text) ? 'project' : 'habit';
   _lastWish = { text, cat, mode };
+  input.value=''; // 許願後清空輸入框（願望已記住）
   renderWishResult();
 }
 function renderWishResult(){
