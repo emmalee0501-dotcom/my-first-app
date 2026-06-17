@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.43</title>
+<title>生活軌跡 · v0.9.44</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
-    --radius: 16px;
+    --radius: 18px;
     --radius-sm: 12px;
-    --shadow: 0 2px 16px rgba(74,69,62,0.05);
+    --shadow: 0 4px 20px rgba(59,48,42,0.04);
+    --serif: "Noto Serif TC", "Songti TC", "STSong", "PingFang TC", serif;
   }
   /* 暮色砂岩（預設） */
   [data-theme="morandi"] {
-    --bg: #f3e9df; --bg2: #e7d6c6; --card: #fbf3ea;
-    --ink: #524339; --ink2: #897564; --ink3: #bca696;
-    --line: #ecdfd0; --line2: #e4d2c0;
-    --accent: #c8906f; --accent2: #b8857a;
+    --bg: #f8f3ec; --bg2: #efe6d8; --card: #fff9f2;
+    --ink: #3b302a; --ink2: #8a7a6c; --ink3: #b8a596;
+    --line: #ece2d2; --line2: #e2d4bf;
+    --accent: #c9a7a2; --accent2: #b89a96;
+    --gold: #d8c7a3; --deep: #2f2a35;
     --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #cb9a80; --c-bodycare: #a3b89a;
     --c-chore: #a89c8e; --c-leisure: #94b0a4; --c-social: #c89aa4;
     --c-sleep: #a098b8; --c-spirit: #bc96aa; --c-travel: #aab588; --c-other: #c6bcae;
@@ -64,8 +66,8 @@
     padding: 20px 0 12px;
     text-align: center;
   }
-  header h1 { font-size: 20px; letter-spacing: 1px; font-weight: 600; }
-  header .ver { font-size: 11px; color: var(--ink3); letter-spacing: 1px; margin-top: 2px; }
+  header h1 { font-family: var(--serif); font-size: 24px; letter-spacing: 3px; font-weight: 600; color: var(--ink); }
+  header .ver { font-size: 10px; color: var(--ink3); letter-spacing: 1px; margin-top: 3px; }
 
   .live {
     background: var(--card);
@@ -121,9 +123,9 @@
   .tabbar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: rgba(253,252,250,0.94);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid var(--line);
+    background: rgba(255,249,242,0.92);
+    backdrop-filter: blur(12px);
+    border-top: 0.5px solid rgba(216,199,163,0.5);
     display: flex;
     z-index: 50;
   }
@@ -132,19 +134,23 @@
     padding: 10px 0 14px;
     text-align: center;
     font-size: 11px;
+    letter-spacing: 1px;
     color: var(--ink3);
     cursor: pointer;
     border: none;
     background: none;
     font-family: inherit;
+    transition: color 0.2s;
   }
-  .tab .ic { font-size: 20px; display: block; margin-bottom: 2px; }
+  .tab .ic { font-size: 20px; display: block; margin-bottom: 3px; }
   .tab.on { color: var(--accent); }
+  .tab.on .ic { transform: scale(1.05); }
 
   .view { display: none; }
   .view.on { display: block; }
 
-  .sect-title { font-size: 13px; color: var(--ink2); margin: 18px 4px 8px; letter-spacing: 0.5px; }
+  .sect-title { font-family: var(--serif); font-size: 15px; color: var(--ink); margin: 20px 4px 10px; letter-spacing: 1px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .sect-title::before { content: ""; width: 14px; height: 1px; background: var(--gold); flex-shrink: 0; }
 
   .day-head { font-size: 13px; color: var(--ink2); padding: 10px 4px 6px; font-weight: 600; }
   .entry {
@@ -195,7 +201,7 @@
   .week-bar { flex: 1; height: 22px; border-radius: 6px; overflow: hidden; display: flex; background: var(--bg2); }
   .week-bar i { height: 100%; }
 
-  .card2 { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .card2 { background: var(--card); border: 0.5px solid rgba(216,199,163,0.45); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
   .pie-wrap { display: flex; align-items: center; gap: 18px; }
   .legend { flex: 1; }
   .legend .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
@@ -615,7 +621,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.43</div>
+    <div class="ver">my-first-app · v0.9.44</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
