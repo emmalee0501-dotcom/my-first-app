@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.36</title>
+<title>生活軌跡 · v0.9.37</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -386,8 +386,8 @@
   .today-state { margin-bottom: 4px; }
   .cat-quick { margin: 14px 0 4px; }
   .cq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
-  .cq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .cq-btn { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 9px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
+  .cq-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .cq-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 7px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
   .cq-btn .cq-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .cq-btn.on { border-color: var(--accent); background: var(--bg); color: var(--ink); font-weight: 600; }
   .journal-box { display: flex; flex-direction: column; gap: 8px; }
@@ -585,7 +585,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.36</div>
+    <div class="ver">my-first-app · v0.9.37</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
