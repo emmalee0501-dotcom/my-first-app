@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.32</title>
+<title>生活軌跡 · v0.9.33</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -17,7 +17,7 @@
     --ink: #524339; --ink2: #897564; --ink3: #bca696;
     --line: #ecdfd0; --line2: #e4d2c0;
     --accent: #c8906f; --accent2: #b8857a;
-    --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #cb9a80;
+    --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #cb9a80; --c-bodycare: #a3b89a;
     --c-chore: #a89c8e; --c-leisure: #94b0a4; --c-social: #c89aa4;
     --c-sleep: #a098b8; --c-spirit: #bc96aa; --c-travel: #aab588; --c-other: #c6bcae;
   }
@@ -27,7 +27,7 @@
     --ink: #5a4348; --ink2: #8c6f74; --ink3: #c4a8ac;
     --line: #f2dee0; --line2: #ecd0d2;
     --accent: #c98a96; --accent2: #b885a0;
-    --c-work: #a8a4c0; --c-study: #d4b896; --c-exercise: #d49e88;
+    --c-work: #a8a4c0; --c-study: #d4b896; --c-exercise: #d49e88; --c-bodycare: #acc0a2;
     --c-chore: #b0a498; --c-leisure: #9cbcb0; --c-social: #d4a0b4;
     --c-sleep: #a8a0c4; --c-spirit: #c4a0bc; --c-travel: #b4c094; --c-other: #ccc0b6;
   }
@@ -37,7 +37,7 @@
     --ink: #534a34; --ink2: #877852; --ink3: #bcae88;
     --line: #ece0c4; --line2: #e6d6b6;
     --accent: #c0a052; --accent2: #b09058;
-    --c-work: #a0a088; --c-study: #c8ac72; --c-exercise: #c49a72;
+    --c-work: #a0a088; --c-study: #c8ac72; --c-exercise: #c49a72; --c-bodycare: #a6b491;
     --c-chore: #aaa080; --c-leisure: #9cae8e; --c-social: #c4a088;
     --c-sleep: #a8a088; --c-spirit: #bca088; --c-travel: #b0ac78; --c-other: #c4b896;
   }
@@ -47,7 +47,7 @@
     --ink: #f0ece2; --ink2: #bcc0cc; --ink3: #8c909c;
     --line: #525468; --line2: #5a5c6e;
     --accent: #c9b486; --accent2: #a8aac0;
-    --c-work: #969cba; --c-study: #cdb488; --c-exercise: #c89a84;
+    --c-work: #969cba; --c-study: #cdb488; --c-exercise: #c89a84; --c-bodycare: #9fb6a4;
     --c-chore: #a098a6; --c-leisure: #8cb4aa; --c-social: #c89aac;
     --c-sleep: #9c94bc; --c-spirit: #b894b0; --c-travel: #a6b88a; --c-other: #a69eac;
   }
@@ -382,6 +382,13 @@
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
   .today-state { margin-bottom: 4px; }
+  .bodycare-quick { margin: 16px 0 4px; }
+  .bq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
+  .bq-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .bq-btn { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px 4px; font-family: inherit; font-size: 12px; color: var(--ink2); cursor: pointer; }
+  .bq-btn:active { border-color: var(--accent); background: var(--bg); }
+  .bq-emoji { font-size: 20px; }
+  .bq-timed { position: absolute; top: 3px; right: 4px; font-size: 8px; color: var(--ink3); background: var(--bg); padding: 1px 4px; border-radius: 8px; }
   .journal-box { display: flex; flex-direction: column; gap: 8px; }
   .journal-box textarea { width: 100%; border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--card); resize: vertical; line-height: 1.6; box-sizing: border-box; }
   .journal-box textarea:focus { outline: none; border-color: var(--accent); }
@@ -577,7 +584,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.32</div>
+    <div class="ver">my-first-app · v0.9.33</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -600,6 +607,7 @@
       <div id="runningSlot"></div>
       <div id="replySlot"></div>
     </div>
+    <div class="bodycare-quick" id="bodycareQuick"></div>
     <div id="todayList"></div>
     <div class="sect-title" style="margin-top:22px;">今日覺察</div>
     <div class="wish-sub" style="margin:0 4px 10px;">寫下一點今天的心情，不用很完整。</div>
@@ -810,6 +818,7 @@ const CAT_DEFS = [
   { id:'work',     name:'工作' },
   { id:'study',    name:'學習' },
   { id:'exercise', name:'運動' },
+  { id:'bodycare', name:'身體照顧' },
   { id:'chore',    name:'家務' },
   { id:'leisure',  name:'休閒' },
   { id:'social',   name:'社交' },
@@ -827,6 +836,7 @@ const KEYWORDS = {
   work:    ['工作','上班','打工','兼職','正職','上工','值班','輪班','加班','開會','會議','企劃','提案','報告','專案','案子','客戶','廠商','email','郵件','信件','回信','編輯','程式','寫code','coding','設計','簡報','製作','業務','跑業務','處理','文件','合約','報價','報帳','出差','面試','應徵','職場','辦公','打卡','送貨','外送','接案','工讀','實習','值勤','營業','顧店','擺攤'],
   study:   ['讀','學','學習','看書','讀書','念書','寫功課','做功課','功課','上課','課程','上網課','線上課','網課','直播課','課','研究','研讀','筆記','做筆記','複習','預習','背','背書','背單字','練習','寫作業','作業','報告','論文','考試','準備考試','考試','溫書','K書','唸書','英文','日文','韓文','語言','閱讀','study','homework','聽課','聽講','演講','講座','研習','培訓','進修','上補習班','圖書館','自習','刷題','補習','教學','看教學','學新東西','摘要','整理知識','知識'],
   exercise:['跑','跑步','慢跑','健身','運動','重訓','肌力','散步','走路','健走','快走','游泳','拉伸','伸展','拉筋','爬山','登山','健行','騎車','騎腳踏車','單車','腳踏車','打球','球','籃球','羽球','網球','桌球','排球','足球','跳舞','舞','舞蹈','跳','有氧','飛輪','拳擊','格鬥','滑板','溜冰','直排輪','攀岩','gym','workout','運動會','體能','訓練','流汗','動一動'],
+  bodycare:['按摩','馬殺雞','spa','泡澡','泡湯','足浴','泡腳','芳療','精油','喝水','補水','早睡','熱敷','刮痧','拔罐','針灸','中醫','推拿','整骨','整脊','護膚','保養','敷臉','面膜','身體保養','放鬆身體','舒緩','瑜伽','瑜珈','拉筋伸展','深呼吸','補眠','調理','養生','穴道','按摩槍','滾筒','放鬆'],
   chore:   ['煮','做飯','煮飯','下廚','備料','洗','洗碗','打掃','清潔','掃','拖地','擦','整理','收拾','家事','家務','買菜','採買','採購','逛超市','洗衣','晾衣','晾','曬','摺衣','燙衣','倒垃圾','丟垃圾','修','修理','組裝','澆花','種花','照顧','顧','餵','遛狗','遛','寵物','繳費','繳帳單','跑銀行','跑郵局','辦事','雜事','維修','整頓','歸位'],
   leisure: ['看劇','追劇','電影','看電影','影集','滑手機','滑ig','滑','遊戲','打game','打遊戲','打電動','電動','電玩','手遊','手機遊戲','玩遊戲','玩手機','放鬆','耍廢','廢','發呆','放空','聽音樂','音樂','podcast','youtube','看影片','看片','逛','逛街','逛網拍','購物','血拼','喝咖啡','咖啡廳','咖啡店','下午茶','看展','展覽','美術館','博物館','畫畫','塗鴉','彈琴','看漫畫','漫畫','看小說','小說','追星','netflix','耍','休息','放鬆一下','玩','娛樂','嗜好','興趣'],
   social:  ['聚','聚會','聚餐','吃飯','吃','約','約會','見面','碰面','聊天','閒聊','朋友','見朋友','家人','陪','陪伴','陪家人','陪小孩','約吃飯','喝酒','小酌','派對','party','慶生','生日','婚禮','喜宴','通話','講電話','打電話','視訊','line','傳訊息','聚聚','敘舊','社交','拜訪','探望','約咖啡','約飯','團聚'],
@@ -944,9 +954,52 @@ const TODAY_CARES = [
 function getTodayState(){
   const today=dateKey(Date.now());
   if(!state.todayState || state.todayState.date!==today){
-    state.todayState={ date:today, mood:null, cares:[] }; // 隔天重置
+    state.todayState={ date:today, mood:null, cares:[], signals:[] }; // 隔天重置
   }
+  if(!state.todayState.signals) state.todayState.signals=[]; // 舊資料補欄位
   return state.todayState;
+}
+const BODY_SIGNALS = [
+  { id:'neck', label:'肩頸緊', emoji:'😣' }, { id:'sleepy', label:'想睡', emoji:'😴' },
+  { id:'fullhead', label:'頭腦很滿', emoji:'🤯' }, { id:'noappetite', label:'胃口不好', emoji:'😖' },
+  { id:'heavy', label:'身體很沉', emoji:'😮‍💨' }, { id:'shallow', label:'呼吸很淺', emoji:'😤' },
+  { id:'wantmove', label:'很想動一動', emoji:'🤸' }, { id:'relaxed', label:'覺得放鬆', emoji:'😌' },
+];
+// 身體照顧快速記錄：即時型一鍵記一筆，計時型開始計時
+const BODYCARE_QUICK = [
+  { id:'water', label:'喝水', emoji:'💧', cat:'bodycare', timed:false },
+  { id:'stretch', label:'伸展', emoji:'🤸', cat:'bodycare', timed:false },
+  { id:'aroma', label:'芳療', emoji:'🌸', cat:'bodycare', timed:false },
+  { id:'earlybed', label:'早睡', emoji:'🌙', cat:'bodycare', timed:false },
+  { id:'exercise', label:'運動', emoji:'🏃', cat:'exercise', timed:true },
+  { id:'massage', label:'按摩', emoji:'💆', cat:'bodycare', timed:true },
+  { id:'bath', label:'泡澡', emoji:'🛁', cat:'bodycare', timed:true },
+  { id:'tcm', label:'中醫調理', emoji:'🌿', cat:'bodycare', timed:true },
+];
+function renderBodycareQuick(){
+  const box=$('bodycareQuick'); if(!box) return;
+  box.innerHTML='<div class="bq-label">身體照顧 · 快速記錄</div><div class="bq-grid">'+
+    BODYCARE_QUICK.map(b=>'<button class="bq-btn" data-bq="'+b.id+'"><span class="bq-emoji">'+b.emoji+'</span>'+b.label+
+      (b.timed?'<span class="bq-timed">計時</span>':'')+'</button>').join('')+'</div>';
+  box.querySelectorAll('[data-bq]').forEach(btn=>{
+    btn.onclick=()=>{
+      const item=BODYCARE_QUICK.find(x=>x.id===btn.dataset.bq);
+      if(item.timed){
+        // 計時型：開始計時（沿用 running 機制）
+        if(state.running) endRunning();
+        state.running={ text:item.label, start:Date.now(), cat:item.cat };
+        save(); renderRunning(); renderToday();
+        showCompanionReply(buildReply(item.cat));
+        $('liveBox').scrollIntoView({behavior:'smooth',block:'center'});
+      } else {
+        // 即時型：一鍵記一筆（當下完成，不計時）
+        const now=Date.now();
+        state.entries.push({ id:'e'+now+Math.random().toString(36).slice(2,6), text:item.label, cat:item.cat, start:now, end:now, mood:'', note:'' });
+        save(); renderToday(); renderMoodWeek();
+        showCompanionReply(buildReply(item.cat));
+      }
+    };
+  });
 }
 function renderTodayState(){
   const box=$('todayState'); if(!box) return;
@@ -955,18 +1008,25 @@ function renderTodayState(){
     '<button class="ts-chip ts-chip-emoji'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'" title="'+m.label+'">'+m.emoji+'</button>').join('');
   const careBtns=TODAY_CARES.map(c=>
     '<button class="ts-chip'+(ts.cares.includes(c.id)?' on':'')+'" data-tscare="'+c.id+'"><span class="ts-emoji">'+c.emoji+'</span>'+c.label+'</button>').join('');
+  const signalBtns=BODY_SIGNALS.map(s=>
+    '<button class="ts-chip'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="ts-emoji">'+s.emoji+'</span>'+s.label+'</button>').join('');
   box.innerHTML=
     '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
-    '<div class="ts-block"><div class="ts-label">今天想照顧</div><div class="ts-chips">'+careBtns+'</div></div>';
+    '<div class="ts-block"><div class="ts-label">今天想照顧</div><div class="ts-chips">'+careBtns+'</div></div>'+
+    '<div class="ts-block"><div class="ts-label">身體訊號（今天身體給你的感覺）</div><div class="ts-chips">'+signalBtns+'</div></div>';
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
-      // 同步寫入心情歷史（給週圖用，優先於記錄心情）
       if(ts.mood){ state.moodHistory[ts.date]=ts.mood; } else { delete state.moodHistory[ts.date]; }
       save(); renderTodayState(); renderMoodWeek(); };
   });
   box.querySelectorAll('[data-tscare]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tscare;
       const i=ts.cares.indexOf(id); if(i>=0)ts.cares.splice(i,1); else ts.cares.push(id);
+      save(); renderTodayState(); };
+  });
+  box.querySelectorAll('[data-tssignal]').forEach(b=>{
+    b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tssignal;
+      const i=ts.signals.indexOf(id); if(i>=0)ts.signals.splice(i,1); else ts.signals.push(id);
       save(); renderTodayState(); };
   });
 }
@@ -1521,6 +1581,7 @@ function renderAll(){
   renderRunning();
   renderToday();
   renderTodayState();
+  renderBodycareQuick();
   renderJournalToday();
   renderTodaySchedule();
   renderCal(); renderCalDetail();
