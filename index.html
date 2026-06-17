@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.44</title>
+<title>生活軌跡 · v0.9.45</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -63,11 +63,31 @@
   }
   .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
   header {
-    padding: 20px 0 12px;
-    text-align: center;
+    padding: 0;
+    position: relative;
   }
-  header h1 { font-family: var(--serif); font-size: 24px; letter-spacing: 3px; font-weight: 600; color: var(--ink); }
-  header .ver { font-size: 10px; color: var(--ink3); letter-spacing: 1px; margin-top: 3px; }
+  .page-head {
+    text-align: center;
+    padding: 28px 0 18px;
+    position: relative;
+  }
+  .page-head-deco {
+    font-size: 22px; color: var(--gold); line-height: 1; margin-bottom: 6px;
+  }
+  .page-title {
+    font-family: var(--serif); font-size: 30px; font-weight: 600;
+    color: var(--ink); letter-spacing: 6px; margin: 0;
+  }
+  .page-sub {
+    font-size: 13px; color: var(--ink2); letter-spacing: 2px; margin-top: 7px;
+    position: relative; display: inline-block; padding: 0 22px;
+  }
+  .page-sub::before, .page-sub::after {
+    content: "✦"; color: var(--gold); font-size: 9px;
+    position: absolute; top: 50%; transform: translateY(-50%);
+  }
+  .page-sub::before { left: 0; }
+  .page-sub::after { right: 0; }
 
   .live {
     background: var(--card);
@@ -386,11 +406,13 @@
   .keep-t1 { font-size: 14px; color: var(--ink); line-height: 1.5; }
   .keep-t2 { font-size: 11px; color: var(--ink3); margin-top: 2px; }
   #themeBtn {
-    position: absolute; top: 20px; right: 16px;
-    background: var(--card); border: 0.5px solid var(--line2); color: var(--ink2);
-    font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 20px; cursor: pointer;
+    position: absolute; top: 24px; right: 12px; z-index: 10;
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    background: var(--card); border: 0.5px solid rgba(216,199,163,0.6); color: var(--accent);
+    font-family: inherit; font-size: 16px; border-radius: 50%; cursor: pointer;
+    box-shadow: var(--shadow);
   }
-  header { position: relative; }
+  .wrap { position: relative; }
   .theme-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
   .theme-opt {
     border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px; cursor: pointer;
@@ -431,11 +453,11 @@
   .ts-emoji { margin-right: 4px; }
   .ts-chip-emoji { font-size: 20px; padding: 6px 12px; line-height: 1.2; }
   .ambient {
-    border-radius: 18px; overflow: hidden; margin-bottom: 14px;
-    border: 0.5px solid var(--line2);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 16px;
+    border: 0.5px solid rgba(216,199,163,0.5); box-shadow: var(--shadow);
   }
   .ambient-inner {
-    min-height: 96px; padding: 16px 18px;
+    min-height: 104px; padding: 18px 20px;
     display: flex; flex-direction: column; justify-content: flex-end; gap: 3px;
   }
   .companion-reply {
@@ -444,9 +466,9 @@
     font-size: 13px; color: var(--ink2); line-height: 1.6;
   }
   @keyframes fadeInReply { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .ambient-time { font-size: 11px; letter-spacing: 1px; }
-  .ambient-date { font-size: 12px; opacity: 0.85; margin-top: 1px; }
-  .ambient-greet { font-size: 15px; font-weight: 500; line-height: 1.5; }
+  .ambient-time { font-size: 11px; letter-spacing: 2px; }
+  .ambient-date { font-size: 12px; opacity: 0.85; margin-top: 1px; letter-spacing: 1px; }
+  .ambient-greet { font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.5; margin-top: 2px; }
   .wish-box { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
   .wish-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
   .wish-sub { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
@@ -574,43 +596,43 @@
   /* 清晨 */
   [data-time="dawn"] .ambient-inner {
     background:
-      radial-gradient(120px 80px at 20% 20%, #f7e0b8 0%, transparent 58%),
-      radial-gradient(140px 95px at 78% 38%, #f2cfae 0%, transparent 60%),
-      radial-gradient(150px 100px at 50% 100%, #eccba0 0%, transparent 66%),
-      linear-gradient(155deg, #faecd6, #f0dcbc);
+      radial-gradient(140px 90px at 22% 18%, #f6e3c4 0%, transparent 60%),
+      radial-gradient(150px 100px at 80% 40%, #f0d3b8 0%, transparent 62%),
+      radial-gradient(160px 110px at 50% 105%, #ecd9be 0%, transparent 68%),
+      linear-gradient(155deg, #fdf4e6, #f3e6d0);
   }
-  [data-time="dawn"] .ambient-time { color: #a9885c; }
-  [data-time="dawn"] .ambient-date { color: #a9885c; }
-  [data-time="dawn"] .ambient-greet { color: #7c6038; }
+  [data-time="dawn"] .ambient-time { color: #b08a5c; }
+  [data-time="dawn"] .ambient-date { color: #b08a5c; }
+  [data-time="dawn"] .ambient-greet { color: #6b5640; }
   /* 午後 */
   [data-time="day"] .ambient-inner {
     background:
-      radial-gradient(120px 80px at 20% 20%, #dcebd6 0%, transparent 58%),
-      radial-gradient(140px 95px at 78% 38%, #cfe2da 0%, transparent 60%),
-      radial-gradient(150px 100px at 50% 100%, #ddd9c2 0%, transparent 66%),
-      linear-gradient(155deg, #eef0e4, #dde4d4);
+      radial-gradient(140px 90px at 22% 18%, #f3ead6 0%, transparent 60%),
+      radial-gradient(150px 100px at 80% 40%, #ecdcc0 0%, transparent 62%),
+      radial-gradient(160px 110px at 50% 105%, #e8dabf 0%, transparent 68%),
+      linear-gradient(155deg, #fdf8ee, #f1e8d6);
   }
-  [data-time="day"] .ambient-time { color: #7d9080; }
-  [data-time="day"] .ambient-date { color: #7d9080; }
-  [data-time="day"] .ambient-greet { color: #4f6256; }
+  [data-time="day"] .ambient-time { color: #a89270; }
+  [data-time="day"] .ambient-date { color: #a89270; }
+  [data-time="day"] .ambient-greet { color: #5f5240; }
   /* 黃昏 */
   [data-time="dusk"] .ambient-inner {
     background:
-      radial-gradient(120px 80px at 20% 20%, #f5cba8 0%, transparent 58%),
-      radial-gradient(140px 95px at 78% 38%, #e9a98e 0%, transparent 60%),
-      radial-gradient(150px 100px at 50% 100%, #dba894 0%, transparent 66%),
-      linear-gradient(155deg, #f7ddc6, #e8bfa8);
+      radial-gradient(140px 90px at 22% 18%, #f3dcc4 0%, transparent 60%),
+      radial-gradient(150px 100px at 80% 40%, #e9c4ac 0%, transparent 62%),
+      radial-gradient(160px 110px at 50% 105%, #e3c2b0 0%, transparent 68%),
+      linear-gradient(155deg, #fbeede, #f0d8c4);
   }
-  [data-time="dusk"] .ambient-time { color: #a06a52; }
-  [data-time="dusk"] .ambient-date { color: #a06a52; }
-  [data-time="dusk"] .ambient-greet { color: #7d4632; }
+  [data-time="dusk"] .ambient-time { color: #a87a5e; }
+  [data-time="dusk"] .ambient-date { color: #a87a5e; }
+  [data-time="dusk"] .ambient-greet { color: #6e4f3e; }
   /* 夜晚 */
   [data-time="night"] .ambient-inner {
     background:
-      radial-gradient(120px 80px at 20% 20%, #524d72 0%, transparent 58%),
-      radial-gradient(140px 95px at 78% 38%, #45406a 0%, transparent 60%),
-      radial-gradient(150px 100px at 50% 100%, #383456 0%, transparent 66%),
-      linear-gradient(155deg, #3b3658, #2a2640);
+      radial-gradient(140px 90px at 22% 18%, #4a4660 0%, transparent 60%),
+      radial-gradient(150px 100px at 80% 40%, #423d5a 0%, transparent 62%),
+      radial-gradient(160px 110px at 50% 105%, #38344e 0%, transparent 68%),
+      linear-gradient(155deg, #423d5a, #2f2a3e);
   }
   [data-time="night"] .ambient-time { color: #c6b186; }
   [data-time="night"] .ambient-date { color: #c6b186; }
@@ -620,12 +642,15 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.44</div>
-    <button id="themeBtn" aria-label="設定">⚙ 設定</button>
+    <button id="themeBtn" aria-label="設定">⚙</button>
   </header>
 
   <section class="view on" id="v-today">
+    <div class="page-head">
+      <div class="page-head-deco">☾</div>
+      <h2 class="page-title">今日</h2>
+      <div class="page-sub">溫柔照顧，每一天</div>
+    </div>
     <div class="ambient" id="ambient">
       <div class="ambient-inner">
         <span class="ambient-time" id="ambientTime"></span>
@@ -846,6 +871,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.45</div>
   </div>
 </div>
 
