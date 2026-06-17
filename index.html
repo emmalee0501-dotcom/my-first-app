@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.37</title>
+<title>生活軌跡 · v0.9.38</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -384,6 +384,8 @@
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
   .today-state { margin-bottom: 4px; }
+  .today-tip { background: var(--bg); border-radius: 12px; padding: 13px 15px; font-size: 14px; color: var(--ink); line-height: 1.7; margin-top: 4px; border-left: 3px solid var(--accent); }
+  .today-tip .tip-label { display: block; font-size: 12px; color: var(--accent); margin-bottom: 4px; }
   .cat-quick { margin: 14px 0 4px; }
   .cq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
   .cq-grid { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -585,7 +587,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.37</div>
+    <div class="ver">my-first-app · v0.9.38</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -987,6 +989,34 @@ function renderCatQuick(){
     };
   });
 }
+// 今日推薦：根據今日心境 + 身體訊號，推一個溫柔小行動（規則式，之後可接 AI）
+function todayTip(ts){
+  // 身體訊號優先（具體），對應一個小行動
+  const SIGNAL_TIP = {
+    neck:'肩頸有點緊，找個空檔聳聳肩、轉一轉，給它鬆一下。',
+    sleepy:'想睡就是身體在討休息，可以的話小睡一下，或早點收工。',
+    fullhead:'頭腦很滿的時候，先把一件事寫下來，騰出一點空間。',
+    noappetite:'胃口不好別勉強，喝點溫熱的、吃一點點就好。',
+    heavy:'身體很沉，今天就放慢一點，不用把行程塞滿。',
+    shallow:'呼吸很淺時，試試慢慢吸氣 4 秒、吐氣 6 秒，做幾次。',
+    wantmove:'很想動一動，那就順著身體，出去走走或伸展一下。',
+    relaxed:'覺得放鬆很好，記得這個感覺，是什麼讓你舒服的？',
+  };
+  if(ts.signals && ts.signals.length){
+    return SIGNAL_TIP[ts.signals[0]] || '聽聽身體的聲音，照它的節奏走。';
+  }
+  // 沒選身體訊號，看心境
+  const MOOD_TIP = {
+    calm:'平靜的日子很珍貴，順著現在的步調，做一件想做的小事。',
+    tired:'累了就先歇一下，喝口水、深呼吸，不用急著完成什麼。',
+    low:'低落的時候，先對自己溫柔一點。一件小事完成就好。',
+    expect:'帶著期待的心情，挑一件最想做的事，先開始第一步。',
+    messy:'有點混亂，先把最近的一件小事做完，會慢慢清晰起來。',
+    driven:'有動力的時候很適合推進，但也記得中途起來動一動。',
+  };
+  if(ts.mood && MOOD_TIP[ts.mood]) return MOOD_TIP[ts.mood];
+  return null; // 都沒選就不顯示
+}
 function renderTodayState(){
   const box=$('todayState'); if(!box) return;
   const ts=getTodayState();
@@ -994,9 +1024,12 @@ function renderTodayState(){
     '<button class="ts-chip ts-chip-emoji'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'" title="'+m.label+'">'+m.emoji+'</button>').join('');
   const signalBtns=BODY_SIGNALS.map(s=>
     '<button class="ts-chip'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="ts-emoji">'+s.emoji+'</span>'+s.label+'</button>').join('');
+  const tip=todayTip(ts);
+  const tipHTML = tip ? '<div class="today-tip"><span class="tip-label">今天可以這樣照顧自己</span>'+esc(tip)+'</div>' : '';
   box.innerHTML=
     '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
-    '<div class="ts-block"><div class="ts-label">身體訊號（今天身體給你的感覺）</div><div class="ts-chips">'+signalBtns+'</div></div>';
+    '<div class="ts-block"><div class="ts-label">身體訊號（今天身體給你的感覺）</div><div class="ts-chips">'+signalBtns+'</div></div>'+
+    tipHTML;
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
       if(ts.mood){ state.moodHistory[ts.date]=ts.mood; } else { delete state.moodHistory[ts.date]; }
