@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.34</title>
+<title>生活軌跡 · v0.9.35</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -384,8 +384,8 @@
   .today-state { margin-bottom: 4px; }
   .cat-quick { margin: 14px 0 4px; }
   .cq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
-  .cq-grid { display: flex; flex-wrap: wrap; gap: 7px; }
-  .cq-btn { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 7px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
+  .cq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cq-btn { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 9px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
   .cq-btn .cq-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .cq-btn.on { border-color: var(--accent); background: var(--bg); color: var(--ink); font-weight: 600; }
   .journal-box { display: flex; flex-direction: column; gap: 8px; }
@@ -583,7 +583,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.34</div>
+    <div class="ver">my-first-app · v0.9.35</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -749,7 +749,7 @@
       </select>
     </div>
     <div class="field">
-      <label>對象分類</label>
+      <label>類別</label>
       <div class="catpick" id="gmCatPick"></div>
     </div>
     <div class="field">
@@ -817,7 +817,7 @@ const CAT_DEFS = [
   { id:'work',     name:'工作' },
   { id:'study',    name:'學習' },
   { id:'exercise', name:'運動' },
-  { id:'bodycare', name:'身體照顧' },
+  { id:'bodycare', name:'保健' },
   { id:'chore',    name:'家務' },
   { id:'leisure',  name:'休閒' },
   { id:'social',   name:'社交' },
@@ -964,11 +964,11 @@ const BODY_SIGNALS = [
   { id:'heavy', label:'身體很沉', emoji:'😮‍💨' }, { id:'shallow', label:'呼吸很淺', emoji:'😤' },
   { id:'wantmove', label:'很想動一動', emoji:'🤸' }, { id:'relaxed', label:'覺得放鬆', emoji:'😌' },
 ];
-// 對象分類快速記錄：點分類即開始計時該類別，點別的分類先結束前一筆
+// 類別快速記錄：點分類即開始計時該類別，點別的分類先結束前一筆
 function renderCatQuick(){
   const box=$('catQuick'); if(!box) return;
   const runningCat = state.running ? state.running.cat : null;
-  box.innerHTML='<div class="cq-label">對象分類</div><div class="cq-grid">'+
+  box.innerHTML='<div class="cq-label">類別</div><div class="cq-grid">'+
     CATS.map(c=>'<button class="cq-btn'+(runningCat===c.id?' on':'')+'" data-cq="'+c.id+'">'+
       '<span class="cq-dot" style="background:'+c.hex+'"></span>'+c.name+'</button>').join('')+
     '</div>';
