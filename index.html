@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.33</title>
+<title>生活軌跡 · v0.9.34</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -382,13 +382,12 @@
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
   .today-state { margin-bottom: 4px; }
-  .bodycare-quick { margin: 16px 0 4px; }
-  .bq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
-  .bq-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .bq-btn { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px 4px; font-family: inherit; font-size: 12px; color: var(--ink2); cursor: pointer; }
-  .bq-btn:active { border-color: var(--accent); background: var(--bg); }
-  .bq-emoji { font-size: 20px; }
-  .bq-timed { position: absolute; top: 3px; right: 4px; font-size: 8px; color: var(--ink3); background: var(--bg); padding: 1px 4px; border-radius: 8px; }
+  .cat-quick { margin: 14px 0 4px; }
+  .cq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
+  .cq-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .cq-btn { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 7px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
+  .cq-btn .cq-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .cq-btn.on { border-color: var(--accent); background: var(--bg); color: var(--ink); font-weight: 600; }
   .journal-box { display: flex; flex-direction: column; gap: 8px; }
   .journal-box textarea { width: 100%; border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--card); resize: vertical; line-height: 1.6; box-sizing: border-box; }
   .journal-box textarea:focus { outline: none; border-color: var(--accent); }
@@ -584,7 +583,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.33</div>
+    <div class="ver">my-first-app · v0.9.34</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -597,7 +596,6 @@
       </div>
     </div>
     <div id="weekReviewCard"></div>
-    <div class="today-state" id="todayState"></div>
     <div id="todaySchedule"></div>
     <div class="live" id="liveBox">
       <div class="input-row">
@@ -607,7 +605,8 @@
       <div id="runningSlot"></div>
       <div id="replySlot"></div>
     </div>
-    <div class="bodycare-quick" id="bodycareQuick"></div>
+    <div class="cat-quick" id="catQuick"></div>
+    <div class="today-state" id="todayState"></div>
     <div id="todayList"></div>
     <div class="sect-title" style="margin-top:22px;">今日覺察</div>
     <div class="wish-sub" style="margin:0 4px 10px;">寫下一點今天的心情，不用很完整。</div>
@@ -917,7 +916,7 @@ function startRunning(){
   if(state.running) endRunning();
   const cat = autoClassify(text);
   state.running = { text, start: Date.now(), cat };
-  input.value=''; save(); renderRunning();
+  input.value=''; save(); renderRunning(); renderCatQuick();
   showCompanionReply(buildReply(cat));
 }
 // 從預先排程直接開始記錄
@@ -965,39 +964,24 @@ const BODY_SIGNALS = [
   { id:'heavy', label:'身體很沉', emoji:'😮‍💨' }, { id:'shallow', label:'呼吸很淺', emoji:'😤' },
   { id:'wantmove', label:'很想動一動', emoji:'🤸' }, { id:'relaxed', label:'覺得放鬆', emoji:'😌' },
 ];
-// 身體照顧快速記錄：即時型一鍵記一筆，計時型開始計時
-const BODYCARE_QUICK = [
-  { id:'water', label:'喝水', emoji:'💧', cat:'bodycare', timed:false },
-  { id:'stretch', label:'伸展', emoji:'🤸', cat:'bodycare', timed:false },
-  { id:'aroma', label:'芳療', emoji:'🌸', cat:'bodycare', timed:false },
-  { id:'earlybed', label:'早睡', emoji:'🌙', cat:'bodycare', timed:false },
-  { id:'exercise', label:'運動', emoji:'🏃', cat:'exercise', timed:true },
-  { id:'massage', label:'按摩', emoji:'💆', cat:'bodycare', timed:true },
-  { id:'bath', label:'泡澡', emoji:'🛁', cat:'bodycare', timed:true },
-  { id:'tcm', label:'中醫調理', emoji:'🌿', cat:'bodycare', timed:true },
-];
-function renderBodycareQuick(){
-  const box=$('bodycareQuick'); if(!box) return;
-  box.innerHTML='<div class="bq-label">身體照顧 · 快速記錄</div><div class="bq-grid">'+
-    BODYCARE_QUICK.map(b=>'<button class="bq-btn" data-bq="'+b.id+'"><span class="bq-emoji">'+b.emoji+'</span>'+b.label+
-      (b.timed?'<span class="bq-timed">計時</span>':'')+'</button>').join('')+'</div>';
-  box.querySelectorAll('[data-bq]').forEach(btn=>{
+// 對象分類快速記錄：點分類即開始計時該類別，點別的分類先結束前一筆
+function renderCatQuick(){
+  const box=$('catQuick'); if(!box) return;
+  const runningCat = state.running ? state.running.cat : null;
+  box.innerHTML='<div class="cq-label">對象分類</div><div class="cq-grid">'+
+    CATS.map(c=>'<button class="cq-btn'+(runningCat===c.id?' on':'')+'" data-cq="'+c.id+'">'+
+      '<span class="cq-dot" style="background:'+c.hex+'"></span>'+c.name+'</button>').join('')+
+    '</div>';
+  box.querySelectorAll('[data-cq]').forEach(btn=>{
     btn.onclick=()=>{
-      const item=BODYCARE_QUICK.find(x=>x.id===btn.dataset.bq);
-      if(item.timed){
-        // 計時型：開始計時（沿用 running 機制）
-        if(state.running) endRunning();
-        state.running={ text:item.label, start:Date.now(), cat:item.cat };
-        save(); renderRunning(); renderToday();
-        showCompanionReply(buildReply(item.cat));
-        $('liveBox').scrollIntoView({behavior:'smooth',block:'center'});
-      } else {
-        // 即時型：一鍵記一筆（當下完成，不計時）
-        const now=Date.now();
-        state.entries.push({ id:'e'+now+Math.random().toString(36).slice(2,6), text:item.label, cat:item.cat, start:now, end:now, mood:'', note:'' });
-        save(); renderToday(); renderMoodWeek();
-        showCompanionReply(buildReply(item.cat));
-      }
+      const catId=btn.dataset.cq;
+      const input=$('entryInput');
+      const text=(input.value.trim()) || catById(catId).name; // 沒輸入就用分類名
+      if(state.running) endRunning(); // 點別的分類先結束前一筆
+      state.running={ text, start:Date.now(), cat:catId };
+      if(input) input.value='';
+      save(); renderRunning(); renderToday(); renderCatQuick();
+      showCompanionReply(buildReply(catId));
     };
   });
 }
@@ -1006,23 +990,15 @@ function renderTodayState(){
   const ts=getTodayState();
   const moodBtns=TODAY_MOODS.map(m=>
     '<button class="ts-chip ts-chip-emoji'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'" title="'+m.label+'">'+m.emoji+'</button>').join('');
-  const careBtns=TODAY_CARES.map(c=>
-    '<button class="ts-chip'+(ts.cares.includes(c.id)?' on':'')+'" data-tscare="'+c.id+'"><span class="ts-emoji">'+c.emoji+'</span>'+c.label+'</button>').join('');
   const signalBtns=BODY_SIGNALS.map(s=>
     '<button class="ts-chip'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="ts-emoji">'+s.emoji+'</span>'+s.label+'</button>').join('');
   box.innerHTML=
     '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
-    '<div class="ts-block"><div class="ts-label">今天想照顧</div><div class="ts-chips">'+careBtns+'</div></div>'+
     '<div class="ts-block"><div class="ts-label">身體訊號（今天身體給你的感覺）</div><div class="ts-chips">'+signalBtns+'</div></div>';
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
       if(ts.mood){ state.moodHistory[ts.date]=ts.mood; } else { delete state.moodHistory[ts.date]; }
       save(); renderTodayState(); renderMoodWeek(); };
-  });
-  box.querySelectorAll('[data-tscare]').forEach(b=>{
-    b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tscare;
-      const i=ts.cares.indexOf(id); if(i>=0)ts.cares.splice(i,1); else ts.cares.push(id);
-      save(); renderTodayState(); };
   });
   box.querySelectorAll('[data-tssignal]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tssignal;
@@ -1581,7 +1557,7 @@ function renderAll(){
   renderRunning();
   renderToday();
   renderTodayState();
-  renderBodycareQuick();
+  renderCatQuick();
   renderJournalToday();
   renderTodaySchedule();
   renderCal(); renderCalDetail();
