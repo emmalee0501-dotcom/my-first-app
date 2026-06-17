@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.47</title>
+<title>生活軌跡 · v0.9.48</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -128,7 +128,7 @@
     color: var(--ink);
     outline: none;
   }
-  .input-row input:focus { border-color: var(--accent); }
+  .input-row input:focus { border-color: var(--gold); }
   .btn {
     border: none;
     border-radius: 12px;
@@ -136,10 +136,11 @@
     font-size: 15px;
     font-family: inherit;
     font-weight: 600;
-    background: var(--accent);
+    background: linear-gradient(135deg, #cba959, #b8923f);
     color: #fff;
     cursor: pointer;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(184,146,63,0.25);
   }
   .btn:active { opacity: 0.8; }
   .btn.ghost { background: var(--bg2); color: var(--ink2); }
@@ -181,9 +182,9 @@
     font-family: inherit;
     transition: color 0.2s;
   }
-  .tab .ic { font-size: 20px; display: block; margin-bottom: 3px; }
-  .tab.on { color: var(--accent); }
-  .tab.on .ic { transform: scale(1.05); }
+  .tab .ic { font-size: 20px; display: block; margin-bottom: 3px; transition: transform 0.2s; }
+  .tab.on { color: var(--deep); }
+  .tab.on .ic { transform: scale(1.05); filter: drop-shadow(0 1px 2px rgba(201,164,78,0.4)); }
 
   .view { display: none; }
   .view.on { display: block; }
@@ -394,7 +395,7 @@
   .sched-itext { flex: 1; font-size: 13px; color: var(--ink); }
   .sched-itext.done { color: var(--ink3); text-decoration: line-through; }
   .sched-del { background: none; border: none; color: var(--ink3); font-size: 17px; cursor: pointer; }
-  .todo-card { background: var(--card); border: 0.5px solid var(--line2); border-radius: 14px; padding: 13px 15px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .todo-card { background: var(--card); border: 1px solid var(--gold); border-radius: 14px; padding: 13px 15px; margin-bottom: 8px; box-shadow: 0 3px 12px rgba(201,164,78,0.08); }
   .todo-card.due { border-color: var(--accent); border-width: 1.5px; }
   .todo-text { font-size: 14px; font-weight: 500; color: var(--ink); }
   .todo-time { font-size: 12px; color: var(--ink3); margin-top: 2px; }
@@ -444,19 +445,19 @@
   .theme-opt .tdesc { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 
   .today-state { margin-bottom: 4px; }
-  .today-tip { background: var(--bg); border-radius: 12px; padding: 13px 15px; font-size: 14px; color: var(--ink); line-height: 1.7; margin-top: 4px; border-left: 3px solid var(--accent); }
-  .today-tip .tip-label { display: block; font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+  .today-tip { background: #fdf6e6; border-radius: 12px; padding: 13px 15px; font-size: 14px; color: var(--ink); line-height: 1.7; margin-top: 16px; border-left: 3px solid var(--gold); }
+  .today-tip .tip-label { display: block; font-size: 12px; color: var(--deep); margin-bottom: 4px; font-weight: 600; }
   .cat-quick { margin: 14px 0 4px; }
   .cq-label { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
   .cq-grid { display: flex; flex-wrap: wrap; gap: 7px; }
   .cq-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 7px 13px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
   .cq-btn .cq-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .cq-btn.on { border-color: var(--accent); background: var(--bg); color: var(--ink); font-weight: 600; }
+  .cq-btn.on { border-color: var(--gold); background: #fdf6e6; color: var(--deep); font-weight: 600; }
   .journal-box { display: flex; flex-direction: column; gap: 8px; }
-  .journal-box textarea { width: 100%; border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--card); resize: vertical; line-height: 1.6; box-sizing: border-box; }
-  .journal-box textarea:focus { outline: none; border-color: var(--accent); }
+  .journal-box textarea { width: 100%; border: 1px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: #fffdf8; resize: vertical; line-height: 1.6; box-sizing: border-box; }
+  .journal-box textarea:focus { outline: none; border-color: var(--gold); }
   .journal-box .btn { align-self: flex-end; }
-  .journal-item { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-top: 10px; border: 0.5px solid var(--line); }
+  .journal-item { background: #fdf8ec; border-radius: 12px; padding: 12px 14px; margin-top: 10px; border: 0.5px solid var(--line2); }
   .journal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .journal-time { font-size: 12px; color: var(--ink3); }
   .journal-acts { display: flex; gap: 10px; align-items: center; }
@@ -482,6 +483,16 @@
   .ts-chip { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; }
   .ts-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .ts-emoji { margin-right: 4px; }
+  .sig-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .sig-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line2); border-radius: 14px; padding: 12px 4px; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+  .sig-tile .sig-emoji {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+    border-radius: 10px; background: radial-gradient(circle at 50% 40%, #fbeede, #f6e4cc);
+  }
+  .sig-tile .sig-label { font-size: 11px; color: var(--ink2); letter-spacing: 0.3px; }
+  .sig-tile.on { border-color: var(--gold); background: #fdf6e6; box-shadow: 0 2px 8px rgba(201,164,78,0.18); }
+  .sig-tile.on .sig-emoji { background: radial-gradient(circle at 50% 40%, #f3dca8, #e8c87e); }
+  .sig-tile.on .sig-label { color: var(--deep); font-weight: 600; }
   .ts-chip-emoji { font-size: 20px; padding: 6px 12px; line-height: 1.2; }
   .ambient {
     border-radius: var(--radius); overflow: hidden; margin-bottom: 16px;
@@ -909,7 +920,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
-    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.47</div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.48</div>
   </div>
 </div>
 
@@ -1129,12 +1140,12 @@ function renderTodayState(){
   const moodBtns=TODAY_MOODS.map(m=>
     '<button class="mood-face'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'"><span class="mf-emoji">'+m.emoji+'</span><span class="mf-label">'+m.label+'</span></button>').join('');
   const signalBtns=BODY_SIGNALS.map(s=>
-    '<button class="ts-chip'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="ts-emoji">'+s.emoji+'</span>'+s.label+'</button>').join('');
+    '<button class="sig-tile'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="sig-emoji">'+s.emoji+'</span><span class="sig-label">'+s.label+'</span></button>').join('');
   const tip=todayTip(ts);
   const tipHTML = tip ? '<div class="today-tip"><span class="tip-label">今天可以這樣照顧自己</span>'+esc(tip)+'</div>' : '';
   box.innerHTML=
     '<div class="ts-block"><div class="t-card-title">今日心情記錄</div><div class="mood-grid">'+moodBtns+'</div></div>'+
-    '<div class="ts-block"><div class="t-card-title">身體狀態記錄</div><div class="ts-chips">'+signalBtns+'</div></div>'+
+    '<div class="ts-block"><div class="t-card-title">身體狀態記錄</div><div class="sig-grid">'+signalBtns+'</div></div>'+
     tipHTML;
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
