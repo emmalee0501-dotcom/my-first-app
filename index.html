@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.46</title>
+<title>生活軌跡 · v0.9.47</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -14,11 +14,11 @@
   }
   /* 暮色砂岩（預設） */
   [data-theme="morandi"] {
-    --bg: #f8f3ec; --bg2: #efe6d8; --card: #fff9f2;
-    --ink: #3b302a; --ink2: #8a7a6c; --ink3: #b8a596;
-    --line: #ece2d2; --line2: #e2d4bf;
-    --accent: #c9a7a2; --accent2: #b89a96;
-    --gold: #d8c7a3; --deep: #2f2a35;
+    --bg: #faf2e1; --bg2: #f3e6cc; --card: #fffdf8;
+    --ink: #4a3f30; --ink2: #8a7a5c; --ink3: #b3a079;
+    --line: #ecdfc4; --line2: #e3d2ac;
+    --accent: #c2a052; --accent2: #b08d44;
+    --gold: #c9a44e; --gold2: #e0c87e; --deep: #8a6d2f;
     --c-work: #9aa0b8; --c-study: #c2af8a; --c-exercise: #cb9a80; --c-bodycare: #a3b89a;
     --c-chore: #a89c8e; --c-leisure: #94b0a4; --c-social: #c89aa4;
     --c-sleep: #a098b8; --c-spirit: #bc96aa; --c-travel: #aab588; --c-other: #c6bcae;
@@ -55,7 +55,8 @@
   }
   body {
     font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
-    background: var(--bg);
+    background: linear-gradient(180deg, #fbf4e6 0%, #f7ecd6 50%, #f3e6cc 100%);
+    background-attachment: fixed;
     color: var(--ink);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -72,14 +73,15 @@
     position: relative;
   }
   .page-head-deco {
-    font-size: 22px; color: var(--gold); line-height: 1; margin-bottom: 6px;
+    font-size: 24px; color: var(--gold); line-height: 1; margin-bottom: 6px;
   }
   .page-title {
-    font-family: var(--serif); font-size: 30px; font-weight: 600;
-    color: var(--ink); letter-spacing: 6px; margin: 0;
+    font-family: var(--serif); font-size: 32px; font-weight: 700;
+    color: var(--deep); letter-spacing: 8px; margin: 0;
+    text-shadow: 0 1px 1px rgba(201,164,78,0.15);
   }
   .page-sub {
-    font-size: 13px; color: var(--ink2); letter-spacing: 2px; margin-top: 7px;
+    font-size: 13px; color: var(--accent2); letter-spacing: 2px; margin-top: 8px;
     position: relative; display: inline-block; padding: 0 22px;
   }
   .page-sub::before, .page-sub::after {
@@ -97,22 +99,22 @@
   }
   .t-card {
     background: var(--card);
-    border: 0.5px solid rgba(216,199,163,0.45);
+    border: 1px solid var(--gold);
     border-radius: var(--radius);
     padding: 18px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 18px rgba(201,164,78,0.10);
     margin-bottom: 16px;
   }
   .t-card-title {
-    font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink);
-    letter-spacing: 1px; margin-bottom: 14px; text-align: center;
+    font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--deep);
+    letter-spacing: 2px; margin-bottom: 14px; text-align: center;
     position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
   }
   .t-card-title::before, .t-card-title::after {
-    content: ""; height: 0.5px; width: 24px; background: var(--gold);
+    content: "✦"; color: var(--gold); font-size: 10px; font-weight: normal;
   }
   .t-card-sub { font-size: 12px; color: var(--ink3); line-height: 1.6; margin: -8px 0 12px; text-align: center; }
-  .t-card .cat-quick { margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--line); }
+  .t-card .cat-quick { margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--line2); }
   .live.active { border: none; }
   .input-row { display: flex; gap: 8px; }
   .input-row input {
@@ -463,8 +465,19 @@
   .journal-del { background: none; border: none; font-size: 12px; color: var(--ink3); cursor: pointer; }
   .journal-text { font-size: 14px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
   .ts-block { margin-bottom: 16px; }
-  .ts-block + .ts-block { padding-top: 16px; border-top: 0.5px solid var(--line); }
+  .ts-block + .ts-block { padding-top: 18px; border-top: 0.5px solid var(--line2); }
   .ts-label { font-size: 13px; color: var(--ink); margin-bottom: 10px; letter-spacing: 0.5px; }
+  .mood-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .mood-face { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-family: inherit; padding: 4px 0; }
+  .mood-face .mf-emoji {
+    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #fbeede, #f6e4cc);
+    border: 1px solid var(--line2); transition: all 0.15s;
+  }
+  .mood-face .mf-label { font-size: 11px; color: var(--ink2); letter-spacing: 0.5px; }
+  .mood-face.on .mf-emoji { background: radial-gradient(circle at 50% 40%, #f3dca8, #e8c87e); border-color: var(--gold); box-shadow: 0 2px 8px rgba(201,164,78,0.3); transform: scale(1.05); }
+  .mood-face.on .mf-label { color: var(--deep); font-weight: 600; }
   .ts-chips { display: flex; flex-wrap: wrap; gap: 7px; }
   .ts-chip { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; }
   .ts-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -896,7 +909,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
-    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.46</div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.47</div>
   </div>
 </div>
 
@@ -1114,14 +1127,14 @@ function renderTodayState(){
   const box=$('todayState'); if(!box) return;
   const ts=getTodayState();
   const moodBtns=TODAY_MOODS.map(m=>
-    '<button class="ts-chip ts-chip-emoji'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'" title="'+m.label+'">'+m.emoji+'</button>').join('');
+    '<button class="mood-face'+(ts.mood===m.id?' on':'')+'" data-tsmood="'+m.id+'"><span class="mf-emoji">'+m.emoji+'</span><span class="mf-label">'+m.label+'</span></button>').join('');
   const signalBtns=BODY_SIGNALS.map(s=>
     '<button class="ts-chip'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="ts-emoji">'+s.emoji+'</span>'+s.label+'</button>').join('');
   const tip=todayTip(ts);
   const tipHTML = tip ? '<div class="today-tip"><span class="tip-label">今天可以這樣照顧自己</span>'+esc(tip)+'</div>' : '';
   box.innerHTML=
-    '<div class="ts-block"><div class="ts-label">今天的心境</div><div class="ts-chips">'+moodBtns+'</div></div>'+
-    '<div class="ts-block"><div class="ts-label">身體訊號（今天身體給你的感覺）</div><div class="ts-chips">'+signalBtns+'</div></div>'+
+    '<div class="ts-block"><div class="t-card-title">今日心情記錄</div><div class="mood-grid">'+moodBtns+'</div></div>'+
+    '<div class="ts-block"><div class="t-card-title">身體狀態記錄</div><div class="ts-chips">'+signalBtns+'</div></div>'+
     tipHTML;
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
