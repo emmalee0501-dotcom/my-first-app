@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.42</title>
+<title>生活軌跡 · v0.9.43</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -516,6 +516,13 @@
   .ritual-icon { font-size: 18px; flex-shrink: 0; }
   .ritual-text { font-size: 14px; color: var(--ink); line-height: 1.7; }
   .ritual-label { display: block; font-size: 12px; color: var(--accent); margin-bottom: 2px; }
+  .mr-title { font-size: 18px; font-weight: 600; color: var(--accent); margin-bottom: 14px; }
+  .mr-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 0.5px solid var(--line); }
+  .mr-row:first-of-type { border-top: none; }
+  .mr-icon { font-size: 17px; flex-shrink: 0; }
+  .mr-text { font-size: 14px; color: var(--ink); line-height: 1.7; }
+  .mr-label { display: block; font-size: 12px; color: var(--accent); margin-bottom: 2px; }
+  .mr-summary { font-size: 14px; color: var(--ink); line-height: 1.8; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--line); }
   .muse-calm-steps { font-size: 15px; color: var(--ink); line-height: 1.9; text-align: center; padding: 0 4px; }
   /* 星座運勢 */
   .muse-zodiac-ask { font-size: 14px; color: var(--ink2); text-align: center; margin-bottom: 12px; }
@@ -608,7 +615,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.42</div>
+    <div class="ver">my-first-app · v0.9.43</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -706,6 +713,9 @@
     <div class="muse-others" id="museOthers"></div>
     <div class="sect-title" style="margin-top:26px;">今天的小儀式</div>
     <div class="card2" id="dailyRitual"></div>
+    <div class="sect-title" style="margin-top:26px;">本月回顧</div>
+    <div class="wish-sub" style="margin:0 4px 10px;">這個月的你，過得如何。</div>
+    <div class="card2" id="monthReview"></div>
   </section>
 
   <section class="view" id="v-partner">
@@ -1674,6 +1684,7 @@ function renderAll(){
   renderActivePlans();
   renderPartner();
   renderDailyRitual();
+  renderMonthReview();
   renderWeekReviewCard();
 }
 
@@ -2152,6 +2163,59 @@ function seasonTreatKey(term){
   if(term.season==='mild') return 'cool';
   if(term.season==='warm') return 'mild';
   return 'hot';
+}
+// ===== 本月回顧：把這個月零散的記錄，整理成一份有溫度的總結 =====
+function renderMonthReview(){
+  const box=$('monthReview'); if(!box) return;
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth();
+  const monthStart=new Date(y,m,1).getTime();
+  const monthName=(m+1)+'月';
+  // 本月記錄
+  const ents=state.entries.filter(e=>e.end && e.start>=monthStart);
+  const monthJournals=(state.journals||[]).filter(j=>j.ts>=monthStart);
+  // 本月有記錄的天數
+  const recordedDays=new Set(ents.map(e=>dateKey(e.start))).size;
+  // 完全沒資料 → 空狀態
+  if(!ents.length && !monthJournals.length && Object.keys(state.moodHistory||{}).filter(k=>new Date(k)>=new Date(y,m,1)).length===0){
+    box.innerHTML='<div class="summary-box">這個月還在開始。<br>記錄幾天的心境與生活，月底這裡就會長出一份屬於你的回顧。</div>';
+    return;
+  }
+  const lines=[];
+  // 心情：本月 moodHistory 最常出現
+  const monthMoods=Object.keys(state.moodHistory||{}).filter(k=>{ const d=new Date(k); return d.getFullYear()===y && d.getMonth()===m; });
+  if(monthMoods.length){
+    const cnt={}; monthMoods.forEach(k=>{ const id=state.moodHistory[k]; cnt[id]=(cnt[id]||0)+1; });
+    const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+    const moodObj=TODAY_MOODS.find(x=>x.id===top);
+    if(moodObj) lines.push({icon:moodObj.emoji, label:'心情', text:'這個月你記錄了 '+monthMoods.length+' 天的心境，最常出現的是「'+moodObj.label+'」。'});
+  }
+  // 時間：花最多的類別
+  if(ents.length){
+    const byCat={}; ents.forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+(e.end-e.start); });
+    const topCat=Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a])[0];
+    lines.push({icon:'⏱️', label:'時間', text:'你記錄了 '+recordedDays+' 天、共 '+ents.length+' 筆。時間花最多的是「'+catById(topCat).name+'」。'});
+    // 保健次數
+    const careCount=ents.filter(e=>e.cat==='bodycare').length;
+    if(careCount>0) lines.push({icon:'🌿', label:'照顧身體', text:'這個月你照顧身體 '+careCount+' 次（保健類記錄），有把自己放在心上。'});
+  }
+  // 身體訊號：本月今日訊號暫不跨日存，略過歷史；改看覺察
+  // 覺察
+  if(monthJournals.length){
+    const starred=monthJournals.filter(j=>j.star).length;
+    lines.push({icon:'📝', label:'覺察', text:'你留下了 '+monthJournals.length+' 篇覺察'+(starred?'，其中 '+starred+' 篇被你標記為值得記住':'')+'。'});
+  }
+  // 溫柔總結句
+  let summary='這個月你願意停下來記錄自己，這件事本身就很好。';
+  if(recordedDays>=15) summary='這個月你很穩定地陪伴自己，記錄了大半個月，繼續保持這個節奏。';
+  else if(recordedDays>=7) summary='這個月你記錄了好些天，慢慢累積，會看見自己的軌跡。';
+  const careCount2=ents.filter(e=>e.cat==='bodycare').length;
+  if(careCount2>=4) summary+=' 你照顧身體的次數不少，這份對自己的溫柔很珍貴。';
+
+  box.innerHTML=
+    '<div class="mr-title">'+monthName+'的你</div>'+
+    lines.map(l=>'<div class="mr-row"><span class="mr-icon">'+l.icon+'</span><div class="mr-text"><span class="mr-label">'+l.label+'</span>'+esc(l.text)+'</div></div>').join('')+
+    '<div class="mr-summary">'+esc(summary)+'</div>';
 }
 function renderDailyRitual(){
   const box=$('dailyRitual'); if(!box) return;
