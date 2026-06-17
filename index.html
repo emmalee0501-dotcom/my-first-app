@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.40</title>
+<title>生活軌跡 · v0.9.41</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -367,6 +367,12 @@
   .nwc-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--bg); border: 1.5px solid var(--line2); border-radius: 20px; padding: 8px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; }
   .nwc-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .nwc-picked { font-size: 13px; color: var(--ink2); line-height: 1.7; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--line); }
+  .body-optin { margin-top: 14px; padding: 14px; background: var(--bg); border-radius: 12px; }
+  .bo-q { font-size: 13px; color: var(--ink2); line-height: 1.7; margin-bottom: 10px; }
+  .bo-actions { display: flex; gap: 8px; }
+  .bo-fields { display: flex; gap: 12px; margin-bottom: 10px; }
+  .bo-fields label { flex: 1; font-size: 13px; color: var(--ink2); display: flex; flex-direction: column; gap: 4px; }
+  .bo-fields input { width: 100%; border: 1px solid var(--line2); border-radius: 10px; padding: 9px 11px; font-family: inherit; font-size: 14px; background: var(--card); color: var(--ink); box-sizing: border-box; }
   .cal-journal .cal-jtime { font-size: 11px; color: var(--ink3); margin-right: 8px; }
   .cal-journal .cal-jstar { color: var(--accent); margin-right: 4px; }
   .keep-star { color: var(--accent); font-size: 15px; }
@@ -594,7 +600,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.40</div>
+    <div class="ver">my-first-app · v0.9.41</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -806,6 +812,7 @@
       <button data-amb="day">固定白天</button>
       <button data-amb="night">固定夜晚</button>
     </div>
+    <div id="setBody"></div>
     <h3 class="set-sub" style="margin-top:20px;">資料管理</h3>
     <div class="hint" style="margin-bottom:10px;">你的記錄都存在這台裝置上</div>
     <div class="set-data">
@@ -879,9 +886,9 @@ let state = loadState();
 function loadState(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; s.journals=s.journals||[]; s.moodHistory=s.moodHistory||{}; s.nextWeekCare=s.nextWeekCare||null; return s; }
+    if(raw){ const s = JSON.parse(raw); s.entries=s.entries||[]; s.goals=s.goals||[]; s.running=s.running||null; s.learned=s.learned||{}; s.plans=s.plans||[]; s.partner=s.partner||null; s.schedules=s.schedules||[]; s.onboarded=s.onboarded||false; s.todayState=s.todayState||null; s.journals=s.journals||[]; s.moodHistory=s.moodHistory||{}; s.nextWeekCare=s.nextWeekCare||null; s.bodyData=s.bodyData||null; return s; }
   } catch(e){}
-  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null, journals: [], moodHistory: {}, nextWeekCare: null };
+  return { entries: [], goals: [], running: null, learned: {}, plans: [], partner: null, schedules: [], onboarded: false, todayState: null, journals: [], moodHistory: {}, nextWeekCare: null, bodyData: null };
 }
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -1873,6 +1880,27 @@ function renderWishResult(){
   }
   const sw=$('switchMode');
   if(sw) sw.onclick=()=>{ _lastWish.mode = mode==='habit'?'project':'habit'; renderWishResult(); };
+  // 身體照顧型願望：溫柔詢問是否追蹤身體變化（可略過；填了才存、才在設定出現）
+  if(cat==='body' && !state.bodyData){
+    box.insertAdjacentHTML('beforeend',
+      '<div class="body-optin" id="bodyOptin">'+
+        '<div class="bo-q">想追蹤身體的變化嗎？可以補充身高體重，幫你看到改變。<br>不想也完全沒關係，這可以略過。</div>'+
+        '<div class="bo-actions"><button class="btn ghost sm" id="bodyAdd">補充身體資料</button><button class="btn ghost sm" id="bodySkip">先略過</button></div>'+
+      '</div>');
+    $('bodySkip').onclick=()=>{ $('bodyOptin').style.display='none'; };
+    $('bodyAdd').onclick=()=>{
+      $('bodyOptin').innerHTML=
+        '<div class="bo-q">都可以留空、之後在設定也能改或刪。</div>'+
+        '<div class="bo-fields"><label>身高 <input id="boHeight" type="number" placeholder="cm"></label>'+
+        '<label>體重 <input id="boWeight" type="number" placeholder="kg"></label></div>'+
+        '<button class="btn sm" id="boSave">儲存</button>';
+      $('boSave').onclick=()=>{
+        const h=parseFloat($('boHeight').value), w=parseFloat($('boWeight').value);
+        state.bodyData={ height: isNaN(h)?null:h, weight: isNaN(w)?null:w, updated:Date.now() };
+        save(); $('bodyOptin').innerHTML='<div class="bo-q">已儲存，之後可以在右上角「設定」裡修改或清除。</div>';
+      };
+    };
+  }
 }
 function addPlanTask(wish, cat, mode, taskText){
   // 找有沒有同願望的計畫卡，沒有就建一張
@@ -2330,7 +2358,25 @@ document.querySelectorAll('#ambientTabs button').forEach(b=>{
   b.onclick = ()=> setAmbientMode(b.dataset.amb);
 });
 
-$('themeBtn').onclick = ()=>{ renderThemeGrid(); renderSetPartner(); applyAmbient(); $('themeModal').classList.add('on'); };
+$('themeBtn').onclick = ()=>{ renderThemeGrid(); renderSetPartner(); renderSetBody(); applyAmbient(); $('themeModal').classList.add('on'); };
+function renderSetBody(){
+  const box=$('setBody'); if(!box) return;
+  if(!state.bodyData){ box.innerHTML=''; return; } // 沒填過就不顯示
+  const b=state.bodyData;
+  box.innerHTML='<h3 class="set-sub" style="margin-top:20px;">身體資料</h3>'+
+    '<div class="hint" style="margin-bottom:10px;">只有你自己看得到，可以修改或清除</div>'+
+    '<div class="bo-fields"><label>身高 <input id="setHeight" type="number" placeholder="cm" value="'+(b.height!=null?b.height:'')+'"></label>'+
+    '<label>體重 <input id="setWeight" type="number" placeholder="kg" value="'+(b.weight!=null?b.weight:'')+'"></label></div>'+
+    '<div class="set-data" style="margin-top:8px"><button class="btn ghost sm" id="setBodySave">儲存</button><button class="btn ghost sm" id="setBodyClear">清除身體資料</button></div>';
+  $('setBodySave').onclick=()=>{
+    const h=parseFloat($('setHeight').value), w=parseFloat($('setWeight').value);
+    state.bodyData={ height:isNaN(h)?null:h, weight:isNaN(w)?null:w, updated:Date.now() };
+    save(); renderSetBody();
+  };
+  $('setBodyClear').onclick=()=>{
+    if(confirm('確定清除身體資料嗎？')){ state.bodyData=null; save(); renderSetBody(); }
+  };
+}
 $('exportData').onclick = ()=>{
   try{
     const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
