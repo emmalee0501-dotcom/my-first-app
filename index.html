@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.41</title>
+<title>生活軌跡 · v0.9.42</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -508,6 +508,14 @@
   .muse-quiz-pick { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
   /* 靜心小練習 */
   .muse-calm-name { font-size: 17px; font-weight: 600; color: var(--accent); text-align: center; margin-bottom: 10px; }
+  .ritual-term { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .ritual-term-name { font-size: 19px; font-weight: 600; color: var(--accent); }
+  .ritual-term-date { font-size: 12px; color: var(--ink3); }
+  .ritual-note { font-size: 14px; color: var(--ink); line-height: 1.7; margin-bottom: 14px; }
+  .ritual-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 0.5px solid var(--line); }
+  .ritual-icon { font-size: 18px; flex-shrink: 0; }
+  .ritual-text { font-size: 14px; color: var(--ink); line-height: 1.7; }
+  .ritual-label { display: block; font-size: 12px; color: var(--accent); margin-bottom: 2px; }
   .muse-calm-steps { font-size: 15px; color: var(--ink); line-height: 1.9; text-align: center; padding: 0 4px; }
   /* 星座運勢 */
   .muse-zodiac-ask { font-size: 14px; color: var(--ink2); text-align: center; margin-bottom: 12px; }
@@ -600,7 +608,7 @@
 <div class="wrap">
   <header>
     <h1>生活軌跡</h1>
-    <div class="ver">my-first-app · v0.9.41</div>
+    <div class="ver">my-first-app · v0.9.42</div>
     <button id="themeBtn" aria-label="設定">⚙ 設定</button>
   </header>
 
@@ -689,7 +697,6 @@
         <button class="muse-mood" data-mood="lost">迷惘，想找方向</button>
         <button class="muse-mood" data-mood="comfort">想被安慰一下</button>
         <button class="muse-mood" data-mood="advice">想要一個觀點</button>
-        <button class="muse-mood" data-mood="calm">想讓自己安定</button>
         <button class="muse-mood" data-mood="horoscope">看今天的運勢</button>
         <button class="muse-mood" data-mood="play">想輕鬆玩一下</button>
       </div>
@@ -697,6 +704,8 @@
     <div id="museChosen"></div>
     <div id="museMain"></div>
     <div class="muse-others" id="museOthers"></div>
+    <div class="sect-title" style="margin-top:26px;">今天的小儀式</div>
+    <div class="card2" id="dailyRitual"></div>
   </section>
 
   <section class="view" id="v-partner">
@@ -1664,6 +1673,7 @@ function renderAll(){
   renderGoals();
   renderActivePlans();
   renderPartner();
+  renderDailyRitual();
   renderWeekReviewCard();
 }
 
@@ -2080,6 +2090,84 @@ const MUSE_QUIZ = {
   ],
 };
 
+// ===== 今天的小儀式：跟著節氣／四季，給身心一個溫柔的提醒 =====
+// 24 節氣（用日期判斷，近似固定日；real 天文曆法，非玄學）。每個節氣一段主題提示。
+const SOLAR_TERMS = [
+  { md:'0204', name:'立春', note:'春天剛起頭，萬物慢慢甦醒。可以給自己一點新的期待。', season:'warm' },
+  { md:'0219', name:'雨水', note:'雨水漸多，空氣濕潤。適合放慢腳步，照顧好心情。', season:'warm' },
+  { md:'0306', name:'驚蟄', name2:'', note:'春雷初響，身體也想動起來了。今天適合舒展一下。', season:'warm' },
+  { md:'0321', name:'春分', note:'晝夜剛好平分，是個適合平衡的日子。', season:'warm' },
+  { md:'0405', name:'清明', note:'天氣清朗。適合到戶外走走，讓自己透透氣。', season:'warm' },
+  { md:'0420', name:'穀雨', note:'雨潤萬物。給自己一點滋養，好好吃飯、好好休息。', season:'warm' },
+  { md:'0506', name:'立夏', note:'夏天開始了，白日漸長。記得在忙碌裡留一點空白。', season:'mild' },
+  { md:'0521', name:'小滿', note:'萬物漸豐但未滿，剛剛好。今天不用追求完美。', season:'mild' },
+  { md:'0606', name:'芒種', note:'天氣漸熱，容易心浮氣躁。今天試著讓自己靜一點。', season:'hot' },
+  { md:'0621', name:'夏至', note:'一年裡白天最長的一天。暑氣正盛，記得多補水、午後歇一歇。', season:'hot' },
+  { md:'0707', name:'小暑', note:'熱意漸濃。給自己消消暑，動作放慢一點。', season:'hot' },
+  { md:'0723', name:'大暑', note:'一年最熱的時候。今天不用勉強，找個陰涼處歇著。', season:'hot' },
+  { md:'0808', name:'立秋', note:'秋天悄悄開始，暑氣未消。可以開始讓作息慢慢收斂。', season:'hot' },
+  { md:'0823', name:'處暑', note:'暑氣漸退。早晚有了涼意，適合早點休息。', season:'mild' },
+  { md:'0908', name:'白露', note:'晨間開始有露水，天氣轉涼。記得添件薄外套。', season:'mild' },
+  { md:'0923', name:'秋分', note:'晝夜再次平分。秋意漸濃，適合沉澱與整理。', season:'mild' },
+  { md:'1008', name:'寒露', note:'露水更涼了。身體開始想要溫暖，注意保暖。', season:'cold' },
+  { md:'1023', name:'霜降', note:'秋天的尾聲，早晚漸寒。給自己多一點溫暖的照顧。', season:'cold' },
+  { md:'1107', name:'立冬', note:'冬天開始了。是收藏、休養的季節，可以早點睡。', season:'cold' },
+  { md:'1122', name:'小雪', note:'天氣轉寒。適合待在溫暖的地方，慢下來。', season:'cold' },
+  { md:'1207', name:'大雪', note:'寒意更深。今天適合給自己煮點暖的、好好窩著。', season:'cold' },
+  { md:'1222', name:'冬至', note:'一年裡夜晚最長的一天。吃點溫熱的，早點休息。', season:'cold' },
+  { md:'0106', name:'小寒', note:'進入最冷的時節。把自己包暖，照顧好身體。', season:'cold' },
+  { md:'0120', name:'大寒', note:'一年最冷的時候。今天的任務就是讓自己暖暖的。', season:'cold' },
+];
+function currentSolarTerm(d){
+  const md = (d.getMonth()+1)*100 + d.getDate(); // 數值 mmdd，例如 617
+  // 依序找出 <= 今天的最後一個節氣；節氣表已按月份排序
+  // 1 月的小寒(106)、大寒(120)要正確處理：1/1–1/5 屬前一年大寒
+  const terms = SOLAR_TERMS.map(t=>({ ...t, n: parseInt(t.md,10) })).sort((a,b)=>a.n-b.n);
+  let cur = terms[terms.length-1]; // 預設大寒（年末到年初）
+  for(const t of terms){ if(md >= t.n) cur = t; }
+  if(md < 106) cur = terms.find(t=>t.name==='大寒'); // 1/1–1/5 仍屬大寒
+  return cur;
+}
+// 身心小動作（輪流，每天不同手法：呼吸／伸展／香氛／安靜片刻）
+const RITUAL_ACTIONS = [
+  '深呼吸三次，慢慢吸、慢慢吐，把肩膀放鬆下來。',
+  '站起來伸個懶腰，雙手往上延展，轉一轉肩頸。',
+  '點一盞喜歡的香氛或蠟燭，讓空間沉靜一下。',
+  '安靜地待一會兒，什麼都不做，只是感受此刻。',
+  '泡一杯溫熱的飲料，雙手捧著，感受那份暖。',
+  '走到窗邊看看外面，給眼睛和心情換個風景。',
+  '寫下一件今天讓你覺得還不錯的小事。',
+  '放一首喜歡的歌，讓自己跟著放鬆下來。',
+];
+// 暖心小確幸（連動季節冷暖）
+const RITUAL_TREATS = {
+  cold: ['今天很適合煮一鍋熱紅酒，讓滿室生香。','泡一壺暖呼呼的奶茶，配一塊小點心。','煮一碗熱湯或薑茶，從身體暖到心裡。','窩進毯子裡，配一杯熱可可。'],
+  cool: ['泡一壺溫熱的桂花茶或紅茶，慢慢喝。','來一碗溫熱的甜湯，給自己一點暖意。','煮杯熱拿鐵，找個安靜角落坐下。'],
+  mild: ['泡一壺花茶，享受不冷不熱的舒服。','切一點當季水果，放在好看的盤子裡。','給自己沖杯手沖咖啡，聞聞香氣。'],
+  hot:  ['來一杯透心涼的氣泡飲，加點檸檬片。','切點西瓜或水果冰在冰箱，消消暑。','泡杯冷泡茶放冰箱，整天都清涼。','做一杯冰拿鐵或氣泡飲，給自己降溫。'],
+};
+function seasonTreatKey(term){
+  // 節氣 season → 小確幸冷暖鍵
+  if(term.season==='cold') return 'cold';
+  if(term.season==='mild') return 'cool';
+  if(term.season==='warm') return 'mild';
+  return 'hot';
+}
+function renderDailyRitual(){
+  const box=$('dailyRitual'); if(!box) return;
+  const now=new Date();
+  const term=currentSolarTerm(now);
+  const seed=dateKey(now.getTime());
+  // 當天固定：用日期當種子挑小動作與小確幸
+  const action = RITUAL_ACTIONS[_horoSeed(seed+'act')%RITUAL_ACTIONS.length];
+  const treatPool = RITUAL_TREATS[seasonTreatKey(term)];
+  const treat = treatPool[_horoSeed(seed+'treat')%treatPool.length];
+  box.innerHTML=
+    '<div class="ritual-term"><span class="ritual-term-name">'+term.name+'</span><span class="ritual-term-date">'+(now.getMonth()+1)+'月'+now.getDate()+'日</span></div>'+
+    '<div class="ritual-note">'+esc(term.note)+'</div>'+
+    '<div class="ritual-row"><span class="ritual-icon">🌿</span><div class="ritual-text"><span class="ritual-label">給身心</span>'+esc(action)+'</div></div>'+
+    '<div class="ritual-row"><span class="ritual-icon">☕</span><div class="ritual-text"><span class="ritual-label">暖心小確幸</span>'+esc(treat)+'</div></div>';
+}
 // 靜心小練習（想安定）— 輕量，不叫冥想
 const MUSE_CALM = [
   { name:'一分鐘呼吸', steps:'吸氣 4 秒，停 2 秒，吐氣 6 秒。重複幾次，把注意力放回呼吸上就好。' },
@@ -2123,7 +2211,6 @@ const MUSE_META = {
   lost:      { key:'guide',  title:'問心籤', sub:'一個問題，陪你找方向' },
   comfort:   { key:'word',   title:'今日小語', sub:'一句話，輕輕接住你' },
   advice:    { key:'tarot',  title:'塔羅・抽一張', sub:'一個觀察自己的角度，僅供參考' },
-  calm:      { key:'calm',   title:'靜心小練習', sub:'花一點點時間，安定下來' },
   horoscope: { key:'horoscope', title:'星座運勢', sub:'看看今天適合照顧哪一塊' },
   play:      { key:'quiz',   title:'心理小測驗', sub:'放鬆一下，玩玩看' },
 };
@@ -2224,10 +2311,6 @@ function museCardHTML(key, withMeta){
     inner='<div class="muse-quiz-q">'+esc(MUSE_QUIZ.q)+'</div><div class="muse-quiz-opts">'+
       MUSE_QUIZ.opts.map((o,i)=>'<button class="muse-quiz-opt" data-qi="'+i+'">'+esc(o.label)+'</button>').join('')+
       '</div><div class="muse-quiz-result" id="museQuizResult"></div>';
-  }
-  else if(key==='calm'){
-    const c=pick(MUSE_CALM);
-    inner='<div class="muse-calm-name">'+esc(c.name)+'</div><div class="muse-calm-steps">'+esc(c.steps)+'</div>';
   }
   else if(key==='horoscope'){
     inner=horoscopeHTML();
