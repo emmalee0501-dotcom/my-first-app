@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.48</title>
+<title>生活軌跡 · v0.9.49</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -479,6 +479,24 @@
   .mood-face .mf-label { font-size: 11px; color: var(--ink2); letter-spacing: 0.5px; }
   .mood-face.on .mf-emoji { background: radial-gradient(circle at 50% 40%, #f3dca8, #e8c87e); border-color: var(--gold); box-shadow: 0 2px 8px rgba(201,164,78,0.3); transform: scale(1.05); }
   .mood-face.on .mf-label { color: var(--deep); font-weight: 600; }
+  .intensity-box { margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--line2); }
+  .intensity-label { font-size: 13px; color: var(--ink); margin-bottom: 8px; letter-spacing: 0.5px; }
+  .intensity-range { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #e8d4a0, #c9a44e); outline: none; }
+  .intensity-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fffdf8; border: 2px solid var(--gold); box-shadow: 0 1px 4px rgba(184,146,63,0.4); cursor: pointer; }
+  .intensity-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fffdf8; border: 2px solid var(--gold); cursor: pointer; }
+  .intensity-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink3); margin-top: 6px; }
+  .dual-card { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .mini-card { background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius); padding: 15px; box-shadow: 0 3px 12px rgba(201,164,78,0.08); }
+  .mini-title { font-family: var(--serif); font-size: 14px; font-weight: 700; color: var(--deep); margin-bottom: 10px; letter-spacing: 1px; }
+  .mini-body { font-size: 13px; color: var(--ink); line-height: 1.7; }
+  .mini-quote { font-family: var(--serif); font-style: italic; }
+  .mini-sign { font-size: 11px; color: var(--ink3); margin-top: 8px; text-align: right; }
+  .overview-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .ov-cell { text-align: center; position: relative; }
+  .ov-cell + .ov-cell::before { content: ""; position: absolute; left: 0; top: 10%; height: 80%; width: 0.5px; background: var(--line2); }
+  .ov-ic { font-size: 20px; margin-bottom: 5px; }
+  .ov-label { font-size: 11px; color: var(--ink3); margin-bottom: 3px; }
+  .ov-val { font-size: 13px; color: var(--deep); font-weight: 600; }
   .ts-chips { display: flex; flex-wrap: wrap; gap: 7px; }
   .ts-chip { background: var(--card); border: 1.5px solid var(--line2); border-radius: 20px; padding: 6px 14px; font-family: inherit; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; }
   .ts-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -727,6 +745,14 @@
       </div>
       <div id="journalToday"></div>
     </div>
+    <div class="dual-card">
+      <div class="mini-card" id="todayReminder"></div>
+      <div class="mini-card" id="todayQuote"></div>
+    </div>
+    <div class="t-card">
+      <div class="t-card-title">今日狀態總覽</div>
+      <div class="overview-row" id="todayOverview"></div>
+    </div>
   </section>
 
   <section class="view" id="v-track">
@@ -920,7 +946,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
-    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.48</div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.49</div>
   </div>
 </div>
 
@@ -1074,9 +1100,10 @@ const TODAY_CARES = [
 function getTodayState(){
   const today=dateKey(Date.now());
   if(!state.todayState || state.todayState.date!==today){
-    state.todayState={ date:today, mood:null, cares:[], signals:[] }; // 隔天重置
+    state.todayState={ date:today, mood:null, cares:[], signals:[], intensity:null }; // 隔天重置
   }
   if(!state.todayState.signals) state.todayState.signals=[]; // 舊資料補欄位
+  if(state.todayState.intensity===undefined) state.todayState.intensity=null;
   return state.todayState;
 }
 const BODY_SIGNALS = [
@@ -1134,6 +1161,52 @@ function todayTip(ts){
   if(ts.mood && MOOD_TIP[ts.mood]) return MOOD_TIP[ts.mood];
   return null; // 都沒選就不顯示
 }
+// 今日提醒 + 陪伴金句（每天輪替，當天固定）
+const TODAY_REMINDERS = [
+  '別忘了喝水與深呼吸，溫柔對待自己。',
+  '今天也記得，做得到一點點就很好。',
+  '累的時候可以停下來，休息也是一種前進。',
+  '對自己好一點，你已經很努力了。',
+  '記得抬頭看看窗外，給自己一點空白。',
+  '慢慢來沒關係，你正在自己的節奏裡。',
+];
+const COMPANION_QUOTES = [
+  '你已經很努力了，慢慢來，也沒關係。',
+  '你不需要完美，你只是正在成為自己。',
+  '允許自己休息，不是偷懶，是照顧。',
+  '每一個願意照顧自己的今天，都值得。',
+  '你本來就夠好了，只是有時候忘了。',
+  '溫柔不是軟弱，是給自己的力量。',
+];
+function renderTodayMini(){
+  const r=$('todayReminder'), q=$('todayQuote');
+  const seed=dateKey(Date.now());
+  if(r){
+    const txt=TODAY_REMINDERS[_horoSeed(seed+'rem')%TODAY_REMINDERS.length];
+    r.innerHTML='<div class="mini-title">🔔 今日提醒</div><div class="mini-body">'+esc(txt)+'</div>';
+  }
+  if(q){
+    const txt=COMPANION_QUOTES[_horoSeed(seed+'quote')%COMPANION_QUOTES.length];
+    q.innerHTML='<div class="mini-title">❝ 陪伴金句</div><div class="mini-body mini-quote">'+esc(txt)+'</div><div class="mini-sign">— 給親愛的你</div>';
+  }
+}
+function renderTodayOverview(){
+  const box=$('todayOverview'); if(!box) return;
+  const ts=getTodayState();
+  const today=dateKey(Date.now());
+  const moodObj=ts.mood?TODAY_MOODS.find(x=>x.id===ts.mood):null;
+  // 真實資料：今日心情 / 今日記錄筆數 / 保健次數 / 覺察篇數
+  const todayEnts=state.entries.filter(e=>e.end && dateKey(e.start)===today);
+  const careCount=todayEnts.filter(e=>e.cat==='bodycare').length;
+  const jrnlCount=(state.journals||[]).filter(j=>j.date===today).length;
+  const cells=[
+    { ic: moodObj?moodObj.emoji:'🙂', label:'心情', val: moodObj?moodObj.label:'未記錄' },
+    { ic:'📝', label:'今日記錄', val: todayEnts.length+' 筆' },
+    { ic:'🌿', label:'保健', val: careCount+' 次' },
+    { ic:'✍️', label:'覺察', val: jrnlCount+' 篇' },
+  ];
+  box.innerHTML=cells.map(c=>'<div class="ov-cell"><div class="ov-ic">'+c.ic+'</div><div class="ov-label">'+c.label+'</div><div class="ov-val">'+esc(c.val)+'</div></div>').join('');
+}
 function renderTodayState(){
   const box=$('todayState'); if(!box) return;
   const ts=getTodayState();
@@ -1143,14 +1216,20 @@ function renderTodayState(){
     '<button class="sig-tile'+(ts.signals.includes(s.id)?' on':'')+'" data-tssignal="'+s.id+'"><span class="sig-emoji">'+s.emoji+'</span><span class="sig-label">'+s.label+'</span></button>').join('');
   const tip=todayTip(ts);
   const tipHTML = tip ? '<div class="today-tip"><span class="tip-label">今天可以這樣照顧自己</span>'+esc(tip)+'</div>' : '';
+  const intensityHTML = ts.mood ?
+    '<div class="intensity-box"><div class="intensity-label">心情強度</div>'+
+    '<input type="range" min="1" max="10" value="'+(ts.intensity||5)+'" class="intensity-range" id="intensityRange">'+
+    '<div class="intensity-ends"><span>輕微</span><span>強烈</span></div></div>' : '';
   box.innerHTML=
-    '<div class="ts-block"><div class="t-card-title">今日心情記錄</div><div class="mood-grid">'+moodBtns+'</div></div>'+
+    '<div class="ts-block"><div class="t-card-title">今日心情記錄</div><div class="mood-grid">'+moodBtns+'</div>'+intensityHTML+'</div>'+
     '<div class="ts-block"><div class="t-card-title">身體狀態記錄</div><div class="sig-grid">'+signalBtns+'</div></div>'+
     tipHTML;
+  const ir=$('intensityRange');
+  if(ir) ir.oninput=()=>{ const ts=getTodayState(); ts.intensity=parseInt(ir.value,10); save(); };
   box.querySelectorAll('[data-tsmood]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); ts.mood = (ts.mood===b.dataset.tsmood)?null:b.dataset.tsmood;
       if(ts.mood){ state.moodHistory[ts.date]=ts.mood; } else { delete state.moodHistory[ts.date]; }
-      save(); renderTodayState(); renderMoodWeek(); };
+      save(); renderTodayState(); renderMoodWeek(); renderTodayOverview(); };
   });
   box.querySelectorAll('[data-tssignal]').forEach(b=>{
     b.onclick=()=>{ const ts=getTodayState(); const id=b.dataset.tssignal;
@@ -1756,6 +1835,8 @@ function renderAll(){
   renderRunning();
   renderToday();
   renderTodayState();
+  renderTodayMini();
+  renderTodayOverview();
   renderCatQuick();
   renderJournalToday();
   renderTodaySchedule();
