@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>生活軌跡 · v0.9.50</title>
+<title>生活軌跡 · v0.9.51</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -250,7 +250,7 @@
   .legend .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
   .legend .lrow .ldot { width: 10px; height: 10px; border-radius: 3px; }
   .legend .lrow .lpct { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
-  .range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .range-tabs { display: flex; gap: 6px; margin: 12px 0 14px; }
   .set-sub { font-size: 14px; margin-bottom: 4px; }
   .set-partner { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .set-pcard { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 10px 12px; font-family: inherit; cursor: pointer; position: relative; }
@@ -555,10 +555,10 @@
   .plan-addstep .stepAdd { width: 100%; border: 1px dashed var(--line2); background: transparent; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: var(--ink); outline: none; }
   .plan-addstep .stepAdd:focus { border-color: var(--accent); border-style: solid; }
   .partner-current { margin-bottom: 18px; }
-  .pc-cur { display: flex; align-items: center; gap: 14px; background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .pc-cur { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius); padding: 16px 18px; box-shadow: 0 4px 18px rgba(201,164,78,0.10); }
   .pc-emoji { font-size: 38px; line-height: 1; }
   .pc-emoji-img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
-  .pc-name { font-size: 17px; font-weight: 600; color: var(--ink); }
+  .pc-name { font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--deep); }
   .pc-en { font-size: 12px; color: var(--ink3); letter-spacing: 1px; }
   .pc-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; }
   .pc-quote { font-size: 13px; color: var(--accent); margin-top: 6px; }
@@ -572,8 +572,8 @@
   .pcard-en { font-size: 10px; color: var(--ink3); letter-spacing: 1px; }
   .pcard-sub { font-size: 11px; color: var(--ink2); margin-top: 4px; line-height: 1.4; }
   .pcard-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 20px; }
-  .muse-intro { margin-bottom: 16px; }
-  .muse-q { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 12px; text-align: center; }
+  .muse-intro { margin-bottom: 16px; background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 18px rgba(201,164,78,0.10); }
+  .muse-q { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--deep); margin-bottom: 14px; text-align: center; letter-spacing: 1px; }
   .muse-chosen-bar { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; animation: museReveal 0.5s ease; }
   .muse-chosen-label { font-size: 14px; color: var(--ink2); }
   .muse-reset { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
@@ -766,23 +766,27 @@
     </div>
     <div class="sect-title">本週提醒</div>
     <div class="card2" id="weekInsight"></div>
-    <div class="sect-title">月曆</div>
-    <div class="cal-head">
-      <button class="btn ghost sm" id="prevMo">‹</button>
-      <div class="mo" id="calMonth"></div>
-      <button class="btn ghost sm" id="nextMo">›</button>
+    <div class="card2">
+      <div class="t-card-title">月曆</div>
+      <div class="cal-head">
+        <button class="btn ghost sm" id="prevMo">‹</button>
+        <div class="mo" id="calMonth"></div>
+        <button class="btn ghost sm" id="nextMo">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div id="calDayDetail"></div>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div id="calDayDetail"></div>
     <div class="sect-title">本週心情與時間</div>
     <div class="card2" id="moodWeek"></div>
-    <div class="sect-title">時間分布</div>
-    <div class="range-tabs" id="rangeTabs">
-      <button data-r="week" class="on">本週</button>
-      <button data-r="month">本月</button>
-      <button data-r="all">全部</button>
+    <div class="card2">
+      <div class="t-card-title">時間分布</div>
+      <div class="range-tabs" id="rangeTabs">
+        <button data-r="week" class="on">本週</button>
+        <button data-r="month">本月</button>
+        <button data-r="all">全部</button>
+      </div>
+      <div id="statPie"></div>
     </div>
-    <div class="card2" id="statPie"></div>
     <div class="sect-title">時間黑洞偵測</div>
     <div class="card2" id="blackhole"></div>
     <div class="sect-title">本週值得記住</div>
@@ -969,7 +973,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
-    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.50</div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.51</div>
   </div>
 </div>
 
