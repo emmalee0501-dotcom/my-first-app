@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>生活軌跡 · v0.9.49</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>生活軌跡 · v0.9.50</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -241,7 +244,7 @@
   .week-bar { flex: 1; height: 22px; border-radius: 6px; overflow: hidden; display: flex; background: var(--bg2); }
   .week-bar i { height: 100%; }
 
-  .card2 { background: var(--card); border: 0.5px solid rgba(216,199,163,0.45); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .card2 { background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 18px rgba(201,164,78,0.10); margin-bottom: 14px; }
   .pie-wrap { display: flex; align-items: center; gap: 18px; }
   .legend { flex: 1; }
   .legend .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
@@ -529,8 +532,8 @@
   .ambient-time { font-size: 11px; letter-spacing: 2px; }
   .ambient-date { font-size: 12px; opacity: 0.85; margin-top: 1px; letter-spacing: 1px; }
   .ambient-greet { font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.5; margin-top: 2px; }
-  .wish-box { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
-  .wish-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .wish-box { background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 18px rgba(201,164,78,0.10); margin-bottom: 14px; }
+  .wish-title { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--deep); margin-bottom: 4px; letter-spacing: 1px; }
   .wish-sub { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
   .plan-opt { background: var(--bg); border: 1px solid var(--line2); border-radius: 12px; padding: 12px 14px; margin-top: 8px; cursor: pointer; font-size: 14px; color: var(--ink); line-height: 1.5; display: flex; align-items: center; gap: 10px; }
   .plan-opt:active { opacity: 0.7; }
@@ -560,8 +563,8 @@
   .pc-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; }
   .pc-quote { font-size: 13px; color: var(--accent); margin-top: 6px; }
   .partner-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .partner-card { background: var(--card); border: 1.5px solid var(--line2); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; position: relative; }
-  .partner-card.on { border-color: var(--accent); }
+  .partner-card { background: var(--card); border: 1px solid var(--line2); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; position: relative; transition: all 0.15s; }
+  .partner-card.on { border-color: var(--gold); background: #fdf6e6; box-shadow: 0 2px 10px rgba(201,164,78,0.2); }
   .partner-card:active { opacity: 0.8; }
   .pcard-emoji { font-size: 30px; line-height: 1; margin-bottom: 6px; }
   .pcard-emoji-img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; margin: 0 auto 6px; display: block; }
@@ -575,8 +578,8 @@
   .muse-chosen-label { font-size: 14px; color: var(--ink2); }
   .muse-reset { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
   .muse-moods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .muse-mood { background: var(--card); border: 1.5px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
-  .muse-mood.on { border-color: var(--accent); color: var(--accent); }
+  .muse-mood { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .muse-mood.on { border-color: var(--gold); color: var(--deep); background: #fdf6e6; }
   .muse-mood:active { opacity: 0.8; }
   .muse-card { background: var(--card); border: 0.5px solid var(--line2); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
   .muse-card-head { margin-bottom: 14px; }
@@ -756,6 +759,11 @@
   </section>
 
   <section class="view" id="v-track">
+    <div class="page-head">
+      <div class="page-head-deco">☾</div>
+      <h2 class="page-title">軌跡</h2>
+      <div class="page-sub">溫柔追蹤，看見自己</div>
+    </div>
     <div class="sect-title">本週提醒</div>
     <div class="card2" id="weekInsight"></div>
     <div class="sect-title">月曆</div>
@@ -785,6 +793,11 @@
   </section>
 
   <section class="view" id="v-goals">
+    <div class="page-head">
+      <div class="page-head-deco">☾</div>
+      <h2 class="page-title">目標</h2>
+      <div class="page-sub">慢慢靠近，想要的生活</div>
+    </div>
     <div class="wish-box">
       <div class="wish-title">許一個願望</div>
       <div class="wish-sub">說一句你想達成的，我陪你想幾個溫柔的小步驟</div>
@@ -804,6 +817,11 @@
   </section>
 
   <section class="view" id="v-muse">
+    <div class="page-head">
+      <div class="page-head-deco">☾</div>
+      <h2 class="page-title">靈感</h2>
+      <div class="page-sub">沉澱心緒，找回方向</div>
+    </div>
     <div class="muse-intro" id="museIntro">
       <div class="muse-q" id="museQ">現在的你，比較想要什麼？</div>
       <div class="muse-moods" id="museMoods">
@@ -825,6 +843,11 @@
   </section>
 
   <section class="view" id="v-partner">
+    <div class="page-head">
+      <div class="page-head-deco">☾</div>
+      <h2 class="page-title">夥伴</h2>
+      <div class="page-sub">有人，一直陪著你</div>
+    </div>
     <div class="partner-current" id="partnerCurrent"></div>
     <div id="partnerPicker">
       <div class="sect-title">選擇同行夥伴</div>
@@ -946,7 +969,7 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn ghost" id="themeClose">完成</button>
     </div>
-    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.49</div>
+    <div style="text-align:center; font-size:10px; color:var(--ink3); letter-spacing:1px; margin-top:14px;">心靈軌跡 · v0.9.50</div>
   </div>
 </div>
 
